@@ -1,18 +1,18 @@
 # gmap_retrieval
 
 ## Overview
-This Python package is for retrieving geographical data from Google API based on a list of locations specified by latitudes and longitudes.　
+This Python package is for retrieving geographical data using Google API based on a list of locations specified by latitudes and longitudes.　
 
 Using this package, you can fetch:
 1. satellite images centered around the input locations,
-2. Google street view images from areas around the input locations, and
-3. various data on Google Maps about properties around the input locations.
+2. Google street view images from randomly-chosen locations around the input locations, and
+3. various data on Google Maps about properties around the input locations such as the number of restaurants and average price level of properties.
 
 You can also:
 4. get list of user reviews based on a list of [Google Place IDs](https://developers.google.com/places/place-id) of properties of interests, and
-5. predict the cost when collecting different types of data using this package.
+5. predict the cost when collecting different types of data using above functions.
 
-This package was originally developed for the purpose of collecting geographical data of individuals in biobank datasets in research contexts.  
+This package was developed for the purpose of collecting geographical data of individuals in biobank datasets in research contexts.  
 
 ## Examples
 ```
@@ -99,11 +99,11 @@ Especially, when using the method calculate_cost, please check if [the official 
 Check docstrings of methods for details.
 
 ## Installation
-`pip install git+https://github.com/TShim/gmap_retrieval.git`
+`pip install git+https://github.com/tshimizu97/gmap_retrieval.git`
 
 ## Author
 * Takao Shimizu  
 * tshimizu.midd@gmail.com
 
 ## License
-gmap_retrieval is under [MIT License](https://en.wikipedia.org/wiki/MIT_License).
+gmap_retrieval is under [BSD 3-Clause License](https://en.wikipedia.org/wiki/BSD_licenses#3-clause_license_(%22BSD_License_2.0%22,_%22Revised_BSD_License%22,_%22New_BSD_License%22,_or_%22Modified_BSD_License%22)).
