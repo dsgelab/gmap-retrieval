@@ -189,7 +189,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                         break
 
         # save a CSV file that contains location information about the saved street view images
-        locations = pd.DataFrame({'name': "image" + pd.Series(range(10)).astype(str)[test_skip==0] + ".png",
+        locations = pd.DataFrame({'name': "image" + pd.Series(range(10)).astype(str)[skip_image==0] + ".png",
                                   'location': np.array(locations)[skip_image==0]})
 
         csv_path = f"{sub_dir}/loc.csv"
