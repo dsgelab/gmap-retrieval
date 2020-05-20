@@ -55,7 +55,7 @@ get_nearby_places(directory_name='nearby_places', API_key=key,
 # create csv file called 'nearby_places.csv' from json files
 # under the directory 'nearby_places'
 nearby_places = create_csv_nearby_places(directory_name='nearby_places',
-                                         place_types='restaurant',
+                                         place_types=['restaurant'],
                                          file_name=None)
 
 place_id = nearby_places['place_id']

@@ -110,6 +110,9 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
                        'subway_station', 'supermarket', 'synagogue', 'taxi_stand', 'tourist_attraction', 'train_station',
                        'transit_station', 'travel_agency', 'university', 'veterinary_care', 'zoo']
 
+    elif type(place_types) is not list:
+        raise TypeError("place_types must be a list.")
+
     # create URLs
     prefix = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
     locations = "location=" + latitude_longitude
