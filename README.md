@@ -66,7 +66,7 @@ get_reviews(directory_name='reviews', API_key=key, place_id=place_id)
 
 # create csv file called 'reviews.csv' from json files
 # under the directory 'reviews'
-_ = create_csv_reviews(directory='reviews', file_name=None)
+_ = create_csv_reviews(directory_name='reviews', file_name=None)
 
 # get the number of API calls made per location
 n_API_calls_per_loc = get_n_api_calls(n_loc=len(data),
