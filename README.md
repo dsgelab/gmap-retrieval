@@ -4,13 +4,13 @@
 This Python package is for retrieving geographical data using Google API based on a list of locations specified by latitudes and longitudes.　
 
 Using this package, you can fetch:
-1. satellite images centered around the input locations,
-2. Google street view images from randomly-chosen locations around the input locations, and
-3. various data on Google Maps about properties around the input locations such as the number of restaurants and average price level of properties.
+* satellite images centered around the input locations,
+* Google street view images from randomly-chosen locations around the input locations, and
+* various data on Google Maps about properties around the input locations such as the number of restaurants and average price level of properties.
 
 You can also:
-4. get list of user reviews based on a list of [Google Place IDs](https://developers.google.com/places/place-id) of properties of interests, and
-5. predict the cost when collecting different types of data using above functions.
+* get list of user reviews based on a list of [Google Place IDs](https://developers.google.com/places/place-id) of properties of interests, and
+* predict the cost when collecting different types of data using above functions.
 
 This package was developed for the purpose of collecting geographical data of individuals in biobank datasets in research contexts.  
 
