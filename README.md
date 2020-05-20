@@ -69,7 +69,7 @@ get_reviews(directory_name='reviews', API_key=key, place_id=place_id)
 _ = create_csv_reviews(directory_name='reviews', file_name=None)
 
 # get the number of API calls made per location
-n_API_calls_per_loc = get_n_api_calls(n_loc=len(data),
+n_api_calls_per_loc = get_n_api_calls(n_loc=len(data),
                                       satellite='satellite_images',
                                       nearby_places='nearby_places',
                                       street_view='street_view',
@@ -81,7 +81,7 @@ n_API_calls_per_loc = get_n_api_calls(n_loc=len(data),
 # but estimate based on only 5 examples as done above
 # would not be reliable in practice
 calculate_cost(n_loc=1000, price_table=None, # use default price table
-               n_API_calls_per_loc=n_API_calls_per_loc,
+               n_api_calls_per_loc=n_api_calls_per_loc,
                extra_expense=0)
 ```
 
