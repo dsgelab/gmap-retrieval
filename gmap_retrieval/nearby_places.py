@@ -200,7 +200,7 @@ def create_csv_nearby_places(directory_name, place_types, file_name=None):
 
     if os.path.exists(file_name):
         print(f"{file_name} already exists!")
-        return None
+        return pd.read_csv(file_name)
 
     IDs = []
     types = []
