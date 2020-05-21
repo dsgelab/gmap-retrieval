@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 setup(
     name='gmap_retrieval',
