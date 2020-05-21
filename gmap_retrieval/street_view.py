@@ -69,7 +69,7 @@ def get_street_view_metadata(API_key, loc, search_radius, outdoor):
     radius = "&radius=" + str(search_radius)
     key = "&key=" + API_key
 
-    url = prefix + location + source + key
+    url = prefix + location + source + radius + key
 
     while True:
         try:
