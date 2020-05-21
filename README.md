@@ -42,7 +42,7 @@ get_street_view_image(directory_name='street_view', API_key=key,
                       IDs=data['id'], latitude_longitude=data['loc'],
                       n_images=10, rad=1, camera_direction=-1,
                       field_of_view=120, angle=0, search_radius=100,
-                      image_type="outdoor", image_size="640x640",
+                      outdoor=True, image_size="640x640",
                       print_progress=True)
 
 # get data of nearby restaurants on Google Maps

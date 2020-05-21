@@ -40,7 +40,7 @@ def get_lat_lon(loc, d, tc):
 
     return lat_lon
 
-def get_street_view_metadata(API_key, loc):
+def get_street_view_metadata(API_key, loc, outdoor):
     """Retrieve metadata of street view image around a specific location.
 
     Parameters
@@ -50,6 +50,8 @@ def get_street_view_metadata(API_key, loc):
     loc: str
         a location specified by latitude and longitude
         need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+    outdoor: boolean, optional (default=True)
+        whether or not to limit the search to outdoor photos
 
     Returns
     -------
@@ -58,9 +60,13 @@ def get_street_view_metadata(API_key, loc):
     """
     prefix = "https://maps.googleapis.com/maps/api/streetview/metadata?"
     location = "location=" + loc
+    if outdoor:
+        source = "&source=outdoor"
+    else:
+        source = ""
     key = "&key=" + API_key
 
-    url = prefix + location + key
+    url = prefix + location + source + key
 
     while True:
         try:
@@ -75,7 +81,7 @@ def get_street_view_metadata(API_key, loc):
     return data
 
 def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
-                          field_of_view=120, angle=0, search_radius=100, image_type="outdoor", image_size="640x640",
+                          field_of_view=120, angle=0, search_radius=100, outdoor=True, image_size="640x640",
                           print_progress=True):
     """Save Google Street View images around specified locations using Street View Satatic API.
 
@@ -109,8 +115,8 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         and negative values angle the camera down (with -90 indicating straight down)
     search_radius:str, optional (default=50)
         a radius, specified in meters, in which to search for a panorama, centered on the given latitude and longitude
-    image_type: str, optional (default="outdoor")
-        a type of images retrieved, either "default", which includes any type of photos, or "outdoor"
+    outdoor: boolean, optional (default=True)
+        whether or not to limit the search to outdoor photos
     image_size: str, optional (default="400x400")
         the rectangular dimensions of the map image;  takes the form {horizontal_value}x{vertical_value}
     print_progress: boolean, optional (default=True)
@@ -145,7 +151,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 direction = npr.uniform(0, np.pi)
                 distance = npr.uniform(0, rad)
                 loc = get_lat_lon(lat_lon, distance, direction)
-                metadata = get_street_view_metadata(API_key, loc)
+                metadata = get_street_view_metadata(API_key, loc, outdoor)
                 if metadata['status'] == 'OK':
                     break
             locations[j] = loc
@@ -164,7 +170,10 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         fov = "&fov=" + str(field_of_view)
         pitch = "&pitch=" + str(angle)
         radius = "&radius=" + str(search_radius)
-        source = "&source=" + image_type
+        if outdoor:
+            source = "&source=outdoor"
+        else:
+            source = ""
         key = "&key=" + API_key
 
         urls = prefix + location + size + heading + fov + pitch + radius + source + key
