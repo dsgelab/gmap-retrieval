@@ -3,58 +3,52 @@ import os
 import pandas as pd
 import urllib
 
-def find_zoom_level(latitudes, ideal_side_length, pixels_per_side):
+def find_zoom_level(latitudes, horizontal_coverage, image_size, image_ratio):
     """Find the best matching zoom level for Google Maps Static API.
 
     Parameters
     ----------
     latitudes: pandas.Series, [n_places]
         list of latitudes for the centers of satellite images
-    ideal_side_length: int
-        ideal side length of an satellite image in km
-    pixels_per_side: int
-        pixels per side of an satellite image
+    horizontal_coverage: int
+        ideal horizontal length of the image coverage in km
+    horizontal_size: int
+        the horizontal length of the image in pixels; the maximum value is 640
 
     Returns
     -------
     zoom_levels: np.array, [n_places]
         list of best zoom levels for places
-    side_lengths: np.array, [n_places]
-        list of side lengths of expected satellite images given zoom_levels
+    actual_horizontal_coverage: list of str, [n_places]
+        list of actual coverages of expected satellite images
     """
-
     # sort 'latitudes' from low to high with its original indices
     sorted_latitudes = sorted(zip(latitudes, range(len(latitudes))), key=lambda pair: pair[0])
 
     zoom_levels = np.zeros(len(latitudes))
-    side_lengths = np.zeros(len(latitudes))
+    actual_horizontal_coverage = np.zeros(len(latitudes))
 
     best_zoom = 1
-    for pair in sorted_latitudes:
-        lat = pair[0]
-        index = pair[1]
+    for lat, index in sorted_latitudes:
         for zoom in range(best_zoom-1, 22):
             meter_per_pixel = 156543.03392 * np.cos(lat * np.pi / 180) / (2**zoom)
-            km_per_image = meter_per_pixel * pixels_per_side / 1000
-            if km_per_image > ideal_side_length: # covered area is still too large
-                previous_ratio = km_per_image**2 / ideal_side_length**2
-                previous_km_per_image = km_per_image
+            horizontal_coverage_in_km = meter_per_pixel * np.array(horizontal_size) / 1000
+            if horizontal_coverage_in_km > horizontal_coverage: # covered area is still too large
+                prev_ratio = (horizontal_coverage_in_km / horizontal_coverage) ** 2
+                prev_horizontal_coverage_in_km = horizontal_coverage_in_km
             else: # now covered area is too small
-                ratio = ideal_side_length**2 / km_per_image**2
+                ratio = (horizontal_coverage / horizontal_coverage_in_km) ** 2
                 break
-        if ratio <= previous_ratio:
-            best_zoom = zoom
-            side_length = km_per_image
-        else:
-            best_zoom = zoom - 1
-            side_length = previous_km_per_image
-        zoom_levels[index] = best_zoom
-        side_lengths[index] = side_length
+        if ratio <= prev_ratio: # a bit bigger coverage is closer to the ideal coverage
+            zoom_levels[index] = zoom
+            actual_horizontal_coverage[index] = horizontal_coverage_in_km
+        else: # a bit smaller coverage is closer to the ideal coverage
+            zoom_levels[index] = zoom - 1
+            actual_horizontal_coverage[index] = prev_horizontal_coverage_in_km
+    return zoom_levels.astype(int), actual_horizontal_coverage
 
-    return zoom_levels.astype(int), side_lengths
-
-def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, side_length=2, image_size="640x640", image_scale=1,
-                        image_format="png", print_progress=True):
+def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizontal_coverage=2, image_size=640, image_ratio=1,
+                        image_scale=1, image_format="png", print_progress=True):
     """Save satellite images for specified locations using Google Maps Satatic API.
 
     Parameters
@@ -68,11 +62,13 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, side_l
     latitude_longitude: pandas Series [n_locations]
         list of locations specified by latitude and longitude;
         each location needs to take the form of comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
-    side_length: int, optional (default=2)
-        ideal side length of an image in km;
-        saved image will NOT have side_length same as side_length but will have a similar side length
-    image_size: str, optional (default="400x400")
-        the rectangular dimensions of the map image; takes the form {horizontal_value}x{vertical_value}
+    horizontal_coverage: int, optional (default="2,2")
+        ideal horizontal length of the image coverage in km
+        saved images will NOT have the same exact dimensions but will have the closest possible dimensions
+    horizontal_size: int, optional (default="640")
+        the horizontal length of the image in pixels; the maximum value is 640
+    image_ratio: float, optional (default=1)
+        the ratio of the vertical length of the image to the horizontal length of the image
     image_scale: int, optional (default=1)
         scaling on the size
     image_format: str, optional (default="png")
@@ -82,13 +78,14 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, side_l
     """
     # find the best zoom levels to feed into Google Maps Static API and resulting side lengths of satellite images
     latitudes = latitude_longitude.apply(lambda x: x.split(",")[0]).astype(float)
-    zoom_levels, side_lengths = find_zoom_level(latitudes, 2, 400)
+    zoom_levels, actual_horizontal = find_zoom_level(latitudes=latitudes, horizontal_coverage=horizontal_coverage,
+                                                horizontal_size=horizontal_size)
 
     # crate URLs
     prefix = "https://maps.googleapis.com/maps/api/staticmap?"
     center = "center=" + latitude_longitude
     zoom = "&zoom=" + pd.Series(zoom_levels, dtype=str)
-    size = "&size=" + image_size
+    size = "&size=" + str(horizontal_size) + "x" + str(horizontal_size*image_ratio)
     scale = "&scale=" + str(image_scale)
     form = "&format=" + image_format
     maptype = "&maptype=" + "satellite"
@@ -130,13 +127,16 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, side_l
                         f.write(image)
                     break
 
-    # save actual side lengths of saved satellite images
-    side_lengths = pd.DataFrame({'id': IDs[skip_id==0], 'side_length': side_lengths[skip_id==0]})
-
+    # save actual side lengths of newly saved satellite images
+    actual_horizontal_new = pd.Series(actual_horizontal[skip_id==0], dtype=str)
+    actual_vertical_new = pd.Series(actual_horizontal_new * image_ratio, dtype=str)
+    actual_coverage = actual_horizontal_new + 'x' + actual_vertical_new
+    new_data = pd.DataFrame({'id': IDs[skip_id==0],
+                                 'actual_coverage': actual_coverage})
     if csv_exist:
-        with open(f"{directory_name}/side_lengths.csv", "a") as f:
-            side_lengths.to_csv(f, index=False, header=False)
+        with open(f"{directory_name}/image_coverage.csv", "a") as f:
+            new_data.to_csv(f, index=False, header=False)
 
     else:
-        with open(f"{directory_name}/side_lengths.csv", "w") as f:
-            side_lengths.to_csv(f, index=False)
+        with open(f"{directory_name}/image_coverage.csv", "w") as f:
+            new_data.to_csv(f, index=False)
