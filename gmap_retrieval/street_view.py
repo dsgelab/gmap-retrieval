@@ -40,7 +40,7 @@ def get_lat_lon(loc, d, tc):
 
     return lat_lon
 
-def get_street_view_metadata(API_key, loc, outdoor):
+def get_street_view_metadata(API_key, loc, radius, outdoor):
     """Retrieve metadata of street view image around a specific location.
 
     Parameters
@@ -50,7 +50,9 @@ def get_street_view_metadata(API_key, loc, outdoor):
     loc: str
         a location specified by latitude and longitude
         need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
-    outdoor: boolean, optional (default=True)
+    search_radius: int
+        a radius, specified in meters, in which to search for a panorama, centered on the given latitude and longitude
+    outdoor: boolean
         whether or not to limit the search to outdoor photos
 
     Returns
@@ -64,6 +66,7 @@ def get_street_view_metadata(API_key, loc, outdoor):
         source = "&source=outdoor"
     else:
         source = ""
+    radius = "&radius=" + str(search_radius)
     key = "&key=" + API_key
 
     url = prefix + location + source + key
@@ -81,7 +84,7 @@ def get_street_view_metadata(API_key, loc, outdoor):
     return data
 
 def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
-                          field_of_view=120, angle=0, search_radius=100, outdoor=True, image_size="640x640",
+                          field_of_view=120, angle=0, search_radius=50, outdoor=True, image_size="640x640",
                           print_progress=True):
     """Save Google Street View images around specified locations using Street View Satatic API.
 
@@ -113,7 +116,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         the up or down angle of the camera relative to the Street View vehicle:
         Positive values angle the camera up (with 90 degrees indicating straight up)
         and negative values angle the camera down (with -90 indicating straight down)
-    search_radius:str, optional (default=50)
+    search_radius: int, optional (default=50)
         a radius, specified in meters, in which to search for a panorama, centered on the given latitude and longitude
     outdoor: boolean, optional (default=True)
         whether or not to limit the search to outdoor photos
@@ -151,7 +154,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 direction = npr.uniform(0, np.pi)
                 distance = npr.uniform(0, rad)
                 loc = get_lat_lon(lat_lon, distance, direction)
-                metadata = get_street_view_metadata(API_key, loc, outdoor)
+                metadata = get_street_view_metadata(API_key, loc, search_radius, outdoor)
                 if metadata['status'] == 'OK':
                     break
             locations[j] = loc
