@@ -76,7 +76,7 @@ def get_street_view_metadata(API_key, loc):
 
 def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
                           field_of_view=120, angle=0, search_radius=100, image_type="outdoor", image_size="640x640",
-                          print_progress):
+                          print_progress=True):
     """Save Google Street View images around specified locations using Street View Satatic API.
 
     Parameters
