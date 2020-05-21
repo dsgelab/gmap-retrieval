@@ -45,6 +45,7 @@ def find_zoom_level(latitudes, horizontal_coverage, image_size, image_ratio):
         else: # a bit smaller coverage is closer to the ideal coverage
             zoom_levels[index] = zoom - 1
             actual_horizontal_coverage[index] = prev_horizontal_coverage_in_km
+            
     return zoom_levels.astype(int), actual_horizontal_coverage
 
 def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizontal_coverage=2, image_size=640, image_ratio=1,

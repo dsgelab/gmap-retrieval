@@ -33,8 +33,8 @@ data = pd.DataFrame([[1, '40.752937,-73.977240', 'NYC Grand Central Station'],
 # this will store satellite images in the directory "satellite_images"
 get_satellite_image(directory_name="satellite_images", API_key=key,
                     IDs=data['id'], latitude_longitude=data['loc'],
-                    side_length=2, image_size="640x640", image_scale=1,
-                    image_format="png")
+                    horizontal_coverage=2, image_size=640, , image_ratio=1,
+                    image_scale=1, image_format="png", print_progress=True)
 
 # get street view images from areas around the locations in the 'data' variable
 # this will store street view images in the directory "street_views"
@@ -42,7 +42,8 @@ get_street_view_image(directory_name='street_view', API_key=key,
                       IDs=data['id'], latitude_longitude=data['loc'],
                       n_images=10, rad=1, camera_direction=-1,
                       field_of_view=120, angle=0, search_radius=100,
-                      image_type="outdoor", image_size="640x640")
+                      image_type="outdoor", image_size="640x640",
+                      print_progress=True)
 
 # get data of nearby restaurants on Google Maps
 # around the locations in the 'data' variables
@@ -50,7 +51,8 @@ get_street_view_image(directory_name='street_view', API_key=key,
 # under the directory called 'nearby_places'
 get_nearby_places(directory_name='nearby_places', API_key=key,
                   IDs=data['id'], latitude_longitude=data['loc'],
-                  radius=1, place_types=['restaurant'])
+                  radius=1, place_types=['restaurant'],
+                  print_progress=True)
 
 # create csv file called 'nearby_places.csv' from json files
 # under the directory 'nearby_places'
@@ -62,7 +64,8 @@ place_id = nearby_places['place_id']
 
 # get reviews for the restaurants around the locations in the 'data' variables
 # saves json files containing review data under directory called 'reviews'
-get_reviews(directory_name='reviews', API_key=key, place_id=place_id)
+get_reviews(directory_name='reviews', API_key=key, place_id=place_id,
+            print_progress=True)
 
 # create csv file called 'reviews.csv' from json files
 # under the directory 'reviews'
