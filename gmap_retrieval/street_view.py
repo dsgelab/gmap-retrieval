@@ -40,7 +40,7 @@ def get_lat_lon(loc, d, tc):
 
     return lat_lon
 
-def get_street_view_metadata(API_key, loc, radius, outdoor):
+def get_street_view_metadata(API_key, loc, search_radius, outdoor):
     """Retrieve metadata of street view image around a specific location.
 
     Parameters
