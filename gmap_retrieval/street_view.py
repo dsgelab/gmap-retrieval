@@ -102,7 +102,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         -2, indicating the heading value calculated to direct the camera
         towards the location specified by latitude and longitude
     field_of_view: int, optional (default=120)
-        the horizontal field of view of the image; maxmum is 120
+        the horizontal field of view of the image; maximum is 120
     angle: int, optional (default=0)
         the up or down angle of the camera relative to the Street View vehicle:
         Positive values angle the camera up (with 90 degrees indicating straight up)
@@ -197,7 +197,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                         break
 
         # save a CSV file that contains location information about the saved street view images
-        locations = pd.DataFrame({'name': "image" + pd.Series(range(10)).astype(str)[skip_image==0] + ".png",
+        locations = pd.DataFrame({'name': "image" + pd.Series(range(len(n_images))).astype(str)[skip_image==0] + ".png",
                                   'location': np.array(locations)[skip_image==0]})
 
         csv_path = f"{sub_dir}/loc.csv"
