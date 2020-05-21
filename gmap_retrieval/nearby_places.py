@@ -6,13 +6,25 @@ import time
 import urllib
 
 def use_nearby_search(url, next_page=False, request_count=0):
-    """
+    """Call nearby search API request.
+
+    Parameters
+    ----------
     url: str
         URL to use to send a Nearby Search Request in Google Maps Place Search API
     next_page: boolean, optional(default=False)
         whether or not the URL is to request next page using next_page_token
     request_count: int, optional(default=0)
         the count of the previously-sent same requests; used only when next_page=True
+
+    Returns
+    -------
+    data: dict
+        returned API response
+        check https://developers.google.com/places/web-service/search#find-place-responses for its structure
+    status: str
+        status of the API response
+        check https://developers.google.com/places/web-service/search#PlaceSearchStatusCodes for details
     """
     while True:
         if next_page:
@@ -30,6 +42,7 @@ def use_nearby_search(url, next_page=False, request_count=0):
                 break
             elif (status == "INVALID_REQUEST") & next_page: # if next_page_token is not valid yet
                 if request_count >= 3:
+                    print(f"Failed to receive a valid API response for 3 times for {url}.")
                     break # stop requesting after 3 trials
                 else:
                     print("...Key is not valid yet.")
@@ -42,14 +55,14 @@ def use_nearby_search(url, next_page=False, request_count=0):
     return data, status
 
 def concat_next_page(data, next_page):
-    """
-    concatenate 'next_page' into 'data'
+    """Concatenate 'next_page' into 'data'.
 
-    input:
-        data: dict
-            a json file returned by Google Nearby Serch API in dict format
-        next_page: dict
-            a json file returned by Google Nearby Serch API in dict format
+    Parameters
+    ----------
+    data: dict
+        a json file returned by Google Nearby Serch API in dict format
+    next_page: dict
+        a json file returned by Google Nearby Serch API in dict format
     """
 
     try:
@@ -60,36 +73,37 @@ def concat_next_page(data, next_page):
     # concat 'results'
     data['results'].extend(next_page["results"])
 
-def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1, place_types=None):
-    """
-    Get and save a list of places around specific locations specified by latitudes and longitudes
-    using Google Maps Place Search API.
+def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1, place_types=None, print_progress=True):
+    """Get a list of places around specific locations specified by latitudes and longitudes using Google Maps Place Search API.
 
     Note that maximum number of properties you can obstain from this method
         for each [place, place type] pair (which are specified by [latitude_longitude, place_types]) pair is 60.
     This is due to the limitation of Google Maps Place Search API, check the details at:
         https://developers.google.com/places/web-service/search
 
-    input
-        directory_name: str
-            name of a new directory containing all the saved images
-        API_key: str
-            key for Google Map API
-        IDs: pandas Series [n_locations]
-            list of IDs that identify locations
-        latitude_longitude: pandas Series [n_locations]
-            list of locations specified by latitude and longitude;
-            each location needs to be comma-separated {latitude,longitude} pair; e.g."40.714728,-73.998672"
-        radius: int, optional (default=1)
-            raidus to search for places in km
-        place_types: ndarray, optional (default=None)
-            list of place types of Google Map to search for; if default, None, all the primary place types are searched
-                Check https://developers.google.com/places/supported_types for further details
-            Notice that this entry doesn't ensure that properties in collected data belong to a place type specified by this entry
-                since this just specifies key words for search
-                to make that sure, re-check the 'types' property in the collected json files
-            Hence, alternatively, you can put a list of any key words here instead of place types of Google Map,
-                then all properties matching with any of the key words are returned
+    Paramters
+    ---------
+    directory_name: str
+        name of a new directory containing all the saved images
+    API_key: str
+        key for Google Map API
+    IDs: pandas Series [n_locations]
+        list of IDs that identify locations
+    latitude_longitude: pandas Series [n_locations]
+        list of locations specified by latitude and longitude;
+        each location needs to be comma-separated {latitude,longitude} pair; e.g."40.714728,-73.998672"
+    radius: int, optional (default=1)
+        raidus to search for places in km
+    place_types: ndarray, optional (default=None)
+        list of place types of Google Map to search for; if default, None, all the primary place types are searched
+            Check https://developers.google.com/places/supported_types for further details
+        Notice that this entry doesn't ensure that properties in collected data belong to a place type specified by this entry
+            since this just specifies key words for search
+            to make that sure, re-check the 'types' property in the collected json files
+        Hence, alternatively, you can put a list of any key words here instead of place types of Google Map,
+            then all properties matching with any of the key words are returned
+    print_progress: boolean, optional (default=True)
+        whether or not to print the progress of the data retrieval
     """
 
     # a list of primary place types taken from https://developers.google.com/places/supported_types
@@ -142,7 +156,8 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
             url = urls[j]
             place_type = place_types[j]
             if os.path.exists(f"{directory}/{lower_dir}/{place_type}.json"):
-                print(f"{directory}/{lower_dir}/{place_type}.json already exists.")
+                if print_progress:
+                    print(f"{directory}/{lower_dir}/{place_type}.json already exists.")
                 continue
 
             #else
@@ -155,7 +170,8 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
                 except KeyError:
                     break # no additional list
                 else: # get the next page
-                    print("...Get next page.")
+                    if print_progress:
+                        print("...Get next page.")
                     pagetoken = "pagetoken=" + next_page_token
                     next_page_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" + pagetoken + key
                     next_page, next_page_status = use_nearby_search(next_page_url, next_page=True, request_count=0)
@@ -166,34 +182,37 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
 
             # save into json file
             if status == 'OK':
-                print(f"...Created {directory}/{lower_dir}/{place_type}.json")
+                if print_progress:
+                    print(f"...Created {directory}/{lower_dir}/{place_type}.json")
                 with open(f"{directory}/{lower_dir}/{place_type}.json", "w") as f:
                     json.dump(data, f)
             elif status == 'ZERO_RESULTS':
-                print(f"...Created {directory}/{lower_dir}/{place_type}.json; No result for {ID}-{place_type}")
+                if print_progress:
+                    print(f"...Created {directory}/{lower_dir}/{place_type}.json; No result for {ID}-{place_type}")
                 with open(f"{directory}/{lower_dir}/{place_type}.json", "w") as f:
                     json.dump(data, f)
             else:
                 print(f"The status of response is: {status} for {ID}-{place_type}.")
-        print(f"Finished retrieving data for {ID}\n")
+        if print_progress:
+            print(f"Finished retrieving data for {ID}\n")
 
 def create_csv_nearby_places(directory_name, place_types, file_name=None):
-    """
-    Create csv file to store info about Nearby Places from directory created by get_nearby_places function
-    Also return the same structured data in pandas DataFrame
+    """Create data table from directory created by get_nearby_places function and save it into csv file.
 
-    input
-        directory_name: str
-            name of directory containing sub-directories which have json files
-        place_types: list
-            list of place types to search for
-        file_name: str, optional (default=None)
-            name of csv file; if None, the file name becomes f"{directory_name}.csv"
+    Parameters
+    ----------
+    directory_name: str
+        name of directory containing sub-directories which have json files
+    place_types: list
+        list of place types to search for
+    file_name: str, optional (default=None)
+        name of csv file; if None, the file name becomes f"{directory_name}.csv"
 
-    return
-        df: pandas DataFrame or None
-            structured data containing essential information in the json files
-            if corresponding csv file exists, return None
+    Returns
+    -------
+    df: pandas DataFrame or None
+        structured data containing essential information in the json files
+        if corresponding csv file exists, return None
     """
     if file_name==None:
         file_name = f"{directory_name}.csv"

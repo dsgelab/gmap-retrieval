@@ -7,22 +7,23 @@ import os
 import urllib
 
 def get_lat_lon(loc, d, tc):
-    """
-    Calculate the latitude and longitude of a place that is 'd' km away from 'loc' in direction 'tc'
+    """Calculate the latitude and longitude of a place that is 'd' km away from 'loc' in direction 'tc'.
 
-    input
-        loc: str
-            a location specified by latitude and longitude
-            need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
-        d: float
-            a distance in km from 'loc' to a place to be returned by this function
-        tc: float
-            a direction in radians
+    Parameters
+    ----------
+    loc: str
+        a location specified by latitude and longitude
+        need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+    d: float
+        a distance in km from 'loc' to a place to be returned by this function
+    tc: float
+        a direction in radians
 
-    return
-        lat_lon: str
-            a location, specified by latitude and longitude, that is 'd' km away from 'loc' in direction 'tc'
-            a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+    Returns
+    -------
+    lat_lon: str
+        a location, specified by latitude and longitude, that is 'd' km away from 'loc' in direction 'tc'
+        a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
     """
     # convert from km to radians
     d = d/6371
@@ -40,21 +41,21 @@ def get_lat_lon(loc, d, tc):
     return lat_lon
 
 def get_street_view_metadata(API_key, loc):
+    """Retrieve metadata of street view image around a specific location.
+
+    Parameters
+    ----------
+    API_key: str
+        key for Google Map API
+    loc: str
+        a location specified by latitude and longitude
+        need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+
+    Returns
+    -------
+    data: dict
+        metadata of a specific location on Google Street View API
     """
-    Retrieve metadata of street view image around a specific location
-
-    input
-        API_key: str
-            key for Google Map API
-        loc: str
-            a location specified by latitude and longitude
-            need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
-
-    return
-        data: dict
-            metadata of a specific location on Google Street View API
-    """
-
     prefix = "https://maps.googleapis.com/maps/api/streetview/metadata?"
     location = "location=" + loc
     key = "&key=" + API_key
@@ -74,43 +75,46 @@ def get_street_view_metadata(API_key, loc):
     return data
 
 def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
-                          field_of_view=120, angle=0, search_radius=100, image_type="outdoor", image_size="640x640"):
-    """
-    Save Google Street View images around specified locations using Street View Satatic API
+                          field_of_view=120, angle=0, search_radius=100, image_type="outdoor", image_size="640x640",
+                          print_progress):
+    """Save Google Street View images around specified locations using Street View Satatic API.
 
-    input
-        directory_name: str
-            name of a new directory containing all the saved images
-        API_key: str
-            key for Google Map API
-        IDs: pandas Series [n_locations]
-            list of IDs that identify locations
-        latitude_longitude: pandas Series [n_locations]
-            list of locations specified by latitude and longitude;
-            each location needs to take the form of comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
-        n_images: int
-            the number of Google Street View images to be fetched for each ID
-        rad: int, optional (default=1)
-            radius, specified in km, of a circle around the location, specified by latitude and longitude, in which
-            the Google Street View images are fetched
-        camera_direction: int, optional (default=-1)
-            the compass heading of the camera
-            Accepted values are from 0 to 360 (both values indicating North, with 90 indicating East, and 180 South),
-            -1, indicating random selection of headinv value from 0 to 360, and
-            -2, indicating the heading value calculated to direct the camera
-            towards the location specified by latitude and longitude
-        field_of_view: int, optional (default=120)
-            the horizontal field of view of the image; maxmum is 120
-        angle: int, optional (default=0)
-            the up or down angle of the camera relative to the Street View vehicle:
-            Positive values angle the camera up (with 90 degrees indicating straight up)
-            and negative values angle the camera down (with -90 indicating straight down)
-        search_radius:str, optional (default=50)
-            a radius, specified in meters, in which to search for a panorama, centered on the given latitude and longitude
-        image_type: str, optional (default="outdoor")
-            a type of images retrieved, either "default", which includes any type of photos, or "outdoor"
-        image_size: str, optional (default="400x400")
-            the rectangular dimensions of the map image;  takes the form {horizontal_value}x{vertical_value}
+    Parameters
+    ----------
+    directory_name: str
+        name of a new directory containing all the saved images
+    API_key: str
+        key for Google Map API
+    IDs: pandas Series [n_locations]
+        list of IDs that identify locations
+    latitude_longitude: pandas Series [n_locations]
+        list of locations specified by latitude and longitude;
+        each location needs to take the form of comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+    n_images: int
+        the number of Google Street View images to be fetched for each ID
+    rad: int, optional (default=1)
+        radius, specified in km, of a circle around the location, specified by latitude and longitude, in which
+        the Google Street View images are fetched
+    camera_direction: int, optional (default=-1)
+        the compass heading of the camera
+        Accepted values are from 0 to 360 (both values indicating North, with 90 indicating East, and 180 South),
+        -1, indicating random selection of headinv value from 0 to 360, and
+        -2, indicating the heading value calculated to direct the camera
+        towards the location specified by latitude and longitude
+    field_of_view: int, optional (default=120)
+        the horizontal field of view of the image; maxmum is 120
+    angle: int, optional (default=0)
+        the up or down angle of the camera relative to the Street View vehicle:
+        Positive values angle the camera up (with 90 degrees indicating straight up)
+        and negative values angle the camera down (with -90 indicating straight down)
+    search_radius:str, optional (default=50)
+        a radius, specified in meters, in which to search for a panorama, centered on the given latitude and longitude
+    image_type: str, optional (default="outdoor")
+        a type of images retrieved, either "default", which includes any type of photos, or "outdoor"
+    image_size: str, optional (default="400x400")
+        the rectangular dimensions of the map image;  takes the form {horizontal_value}x{vertical_value}
+    print_progress: boolean, optional (default=True)
+        whether or not to print the progress of the data retrieval
     """
     # create directory in which all the images are saved
     if not os.path.exists(directory_name):
@@ -128,7 +132,8 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             os.mkdir(sub_dir)
         elif len(fnmatch.filter(os.listdir(sub_dir), '*.png')) == n_images:
             # if there are already n_images png images in the sub-directory
-            print(f"The directory {sub_dir} already has {n_images} images!")
+            if print_progress:
+                print(f"The directory {sub_dir} already has {n_images} images!")
             continue
         else:
             pass
@@ -170,20 +175,23 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             url = urls[j]
             file_name = f"{sub_dir}/image{j}.png"
             if os.path.exists(file_name):
-                print(f"...{file_name} already exists.")
+                if print_progress:
+                    print(f"...{file_name} already exists.")
                 skip_image[j] = 1
 
             else:
                 while True:
                     try:
                         # get API response
-                        print(f"API request made: {ID}-image{j}")
+                        if print_progress:
+                            print(f"API request made: {ID}-image{j}")
                         image = urllib.request.urlopen(url).read()
                     except IOError:
                         pass # retry
                     else:
                         # save the png image
-                        print(f"...Save {file_name}.")
+                        if print_progress:
+                            print(f"...Save {file_name}.")
                         with open(file_name, mode="wb") as f:
                             f.write(image)
                         break
@@ -199,4 +207,5 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         else:
             with open(csv_path, 'w') as f:
                 locations.to_csv(f, index=False)
-        print(f"Finished retrieving street view images for {ID}!\n")
+        if print_progress:
+            print(f"Finished retrieving street view images for {ID}!\n")
