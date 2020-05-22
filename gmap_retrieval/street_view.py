@@ -22,22 +22,34 @@ def get_lat_lon(loc, d, tc):
 
     Returns
     -------
-    lat_lon: str
-        a location, specified by latitude and longitude, that is 'd' km away from 'loc' in direction 'tc'
-        a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+    lat_lon: str | list of str
+        a location (or locations), specified by latitude and longitude, that is 'd' km away from 'loc' in direction 'tc'
+        each location needs to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
     """
+    if type(loc)==str:
+        loc = [loc]
+        d = [d]
+        tc =[tc]
+
+    if len(loc)!=len(d) or len(loc)!=len(tc) or len(d)!=len(tc):
+        raise ValueError("The lengths of loc, d and tc have to be same.")
+
+    loc = np.array([l.split(",") for l in loc], dtype=float)
+    d = np.array(d)
+    tc = np.array(tc)
+
     # convert from km to radians
     d = d/6371
 
-    loc = loc.split(',')
-    lat1 = float(loc[0])*np.pi/180
-    lon1 = float(loc[1])*np.pi/180
+    loc = loc*np.pi/180
+    lat1 = loc[:, 0]
+    lon1 = loc[:, 1]
 
-    lat = np.arcsin(np.sin(lat1)*np.cos(d) + np.cos(lat1)*np.sin(d)*np.cos(tc))
-    dlon = np.arctan2(np.sin(tc)*np.sin(d)*np.cos(lat1), np.cos(d) - np.sin(lat1)*np.sin(lat))
-    lon = (lon1 - dlon + np.pi) % (2*np.pi) - np.pi
+    lat = np.arcsin(np.sin(lat1) * np.cos(d) + np.cos(lat1) * np.sin(d) * np.cos(tc))
+    dlon = np.arctan2(np.sin(tc) * np.sin(d) * np.cos(lat1), np.cos(d) - np.sin(lat1) * np.sin(lat))
+    lon = (lon1 - dlon + np.pi) % (2 * np.pi) - np.pi
 
-    lat_lon = str(lat*180/np.pi) + "," + str(lon*180/np.pi)
+    lat_lon = str(lat * 180 / np.pi) + "," + str(lon * 180 / np.pi)
 
     return lat_lon
 
