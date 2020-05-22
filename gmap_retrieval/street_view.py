@@ -4,6 +4,7 @@ import numpy as np
 import numpy.random as npr
 import pandas as pd
 import os
+from tqdm import tqdm
 import urllib
 
 def get_lat_lon(loc, d, tc):
@@ -123,14 +124,22 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
     image_size: str, optional (default="400x400")
         the rectangular dimensions of the map image;  takes the form {horizontal_value}x{vertical_value}
     print_progress: boolean, optional (default=True)
-        whether or not to print the progress of the data retrieval
+        whether or not to print the progress bar of the data retrieval
+    if_jupyter: boolean, optional (default=False)
+        whether or not the program is running on Jupyter; this matters only if print_progress==True
     """
+    if len(IDs) != len(latitude_longitude):
+        raise ValueError("The lengths of IDs and latitude_longitude have to be same.")
+
+    if if_jupyter:
+        from tqdm.notebook import tqdm
+
     # create directory in which all the images are saved
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
 
     # go through each specified location
-    for i in range(len(IDs)):
+    for i in (tqdm(range(len(IDs))) if print_progress else range(len(IDs))):
         ID = str(IDs[i])
         lat_lon = latitude_longitude[i]
 
@@ -141,8 +150,6 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             os.mkdir(sub_dir)
         elif len(fnmatch.filter(os.listdir(sub_dir), '*.png')) == n_images:
             # if there are already n_images png images in the sub-directory
-            if print_progress:
-                print(f"The directory {sub_dir} already has {n_images} images!")
             continue
         else:
             pass
@@ -187,23 +194,17 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             url = urls[j]
             file_name = f"{sub_dir}/image{j}.png"
             if os.path.exists(file_name):
-                if print_progress:
-                    print(f"...{file_name} already exists.")
                 skip_image[j] = 1
 
             else:
                 while True:
                     try:
                         # get API response
-                        if print_progress:
-                            print(f"API request made: {ID}-image{j}")
                         image = urllib.request.urlopen(url).read()
                     except IOError:
                         pass # retry
                     else:
                         # save the png image
-                        if print_progress:
-                            print(f"...Save {file_name}.")
                         with open(file_name, mode="wb") as f:
                             f.write(image)
                         break
@@ -219,5 +220,3 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         else:
             with open(csv_path, 'w') as f:
                 locations.to_csv(f, index=False)
-        if print_progress:
-            print(f"Finished retrieving street view images for {ID}!\n")

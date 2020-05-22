@@ -43,7 +43,7 @@ get_street_view_image(directory_name='street_view', API_key=key,
                       n_images=10, rad=1, camera_direction=-1,
                       field_of_view=120, angle=0, search_radius=100,
                       outdoor=True, image_size="640x640",
-                      print_progress=True)
+                      print_progress=True, if_jupyter==False)
 
 # get data of nearby restaurants on Google Maps
 # around the locations in the 'data' variables
@@ -93,6 +93,7 @@ calculate_cost(n_loc=1000, price_table=None, # use default price table
 * [Get your own Google API key](https://developers.google.com/places/web-service/get-api-key).
 * numpy 1.18.1
 * pandas 1.0.1
+* tqdm 4.43
 
 ## Disclaimer
 This package is built based on Google APIs, and any change in the APIs might cause problems in running this package.  
