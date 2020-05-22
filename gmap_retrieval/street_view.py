@@ -139,17 +139,23 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         os.mkdir(directory_name)
 
     # go through each specified location
-    for i in (tqdm(range(len(IDs))) if print_progress else range(len(IDs))):
+    if print_progress:
+        bar = tqdm(total=len(IDs) * n_images)
+    for i in range(len(IDs)):
         ID = str(IDs[i])
         lat_lon = latitude_longitude[i]
 
         # create a sub-directory in which 'n_images' Google Street View images around the specified location are saved
         sub_dir = f"{directory_name}/{ID}"
+
+        # if the sub-directory doesn't exist, create a new one
         if not os.path.exists(sub_dir):
-            # if the sub-directory doesn't exist, create a new one
             os.mkdir(sub_dir)
+
+        # if there are already n_images png images in the sub-directory
         elif len(fnmatch.filter(os.listdir(sub_dir), '*.png')) == n_images:
-            # if there are already n_images png images in the sub-directory
+            if print_progress:
+                bar.update(n_images)
             continue
         else:
             pass
@@ -193,6 +199,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         for j in range(len(urls)):
             url = urls[j]
             file_name = f"{sub_dir}/image{j}.png"
+            # if a spacific image already exists
             if os.path.exists(file_name):
                 skip_image[j] = 1
 
@@ -208,6 +215,8 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                         with open(file_name, mode="wb") as f:
                             f.write(image)
                         break
+            if print_progress:
+                bar.update(1)
 
         # save a CSV file that contains location information about the saved street view images
         locations = pd.DataFrame({'name': "image" + pd.Series(range(n_images)).astype(str)[skip_image==0] + ".png",
