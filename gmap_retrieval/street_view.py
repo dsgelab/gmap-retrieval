@@ -140,7 +140,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
 
     # go through each specified location
     if print_progress:
-        bar = tqdm(total=len(IDs) * n_images, mininterval=0)
+        bar = tqdm(total=len(IDs) * n_images, mininterval=0, maxinterval=1)
     for i in range(len(IDs)):
         ID = str(IDs[i])
         lat_lon = latitude_longitude[i]
