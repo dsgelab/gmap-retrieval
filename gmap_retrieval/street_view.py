@@ -12,13 +12,13 @@ def get_lat_lon(loc, d, tc):
 
     Parameters
     ----------
-    loc: str
-        a location specified by latitude and longitude
-        need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
-    d: float
-        a distance in km from 'loc' to a place to be returned by this function
-    tc: float
-        a direction in radians
+    loc: str | list of str
+        a location (or locations) specified by latitude and longitude
+        each location needs to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+    d: float | list of float
+        a distance (or distances) in km from 'loc' to a place to be returned by this function
+    tc: float | list of float
+        a direction (or directions) in radians
 
     Returns
     -------
