@@ -22,8 +22,8 @@ def get_lat_lon(loc, d, tc):
 
     Returns
     -------
-    lat_lon: str | list of str
-        a location (or locations), specified by latitude and longitude, that is 'd' km away from 'loc' in direction 'tc'
+    lat_lon: pandas Series of str
+        location(s), specified by latitude and longitude, that is 'd' km away from 'loc' in direction 'tc'
         each location needs to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
     """
     if type(loc)==str:
@@ -49,30 +49,37 @@ def get_lat_lon(loc, d, tc):
     dlon = np.arctan2(np.sin(tc) * np.sin(d) * np.cos(lat1), np.cos(d) - np.sin(lat1) * np.sin(lat))
     lon = (lon1 - dlon + np.pi) % (2 * np.pi) - np.pi
 
-    lat_lon = str(lat * 180 / np.pi) + "," + str(lon * 180 / np.pi)
+    lat_lon = pd.Series((lat * 180 / np.pi), dtype=str) + "," + pd.Series((lon * 180 / np.pi), dtype=str)
 
     return lat_lon
 
-def get_street_view_metadata(API_key, loc, search_radius, outdoor):
-    """Retrieve metadata of street view image around a specific location.
+def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
+    """Check if Google street view image is available around specific location(s).
+    Check https://developers.google.com/maps/documentation/streetview/metadata for details of API.
 
     Parameters
     ----------
     API_key: str
         key for Google Map API
-    loc: str
-        a location specified by latitude and longitude
-        need to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+    loc: numpy chararray
+        location(s) specified by latitude and longitude
+        each location needs to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
     search_radius: int
         a radius, specified in meters, in which to search for a panorama, centered on the given latitude and longitude
     outdoor: boolean
         whether or not to limit the search to outdoor photos
+    limit: int | None
+        the number of "OK" status of locations after which the function stops finding the status of further locations
+        if None, no limit is set
 
     Returns
     -------
-    data: dict
-        metadata of a specific location on Google Street View API
+    availability: list of boolean
+        a list of whether a Google street view image is available around specific location(s)
     """
+    if limit == None:
+        limit = len(loc)
+
     prefix = "https://maps.googleapis.com/maps/api/streetview/metadata?"
     location = "location=" + loc
     if outdoor:
@@ -82,19 +89,26 @@ def get_street_view_metadata(API_key, loc, search_radius, outdoor):
     radius = "&radius=" + str(search_radius)
     key = "&key=" + API_key
 
-    url = prefix + location + source + radius + key
+    urls = prefix + location + source + radius + key
 
-    while True:
-        try:
-            # get API response
-            response = urllib.request.urlopen(url)
-        except IOError:
-            pass # retry
-        else: # if no IOError occurs
-            data = json.loads(response.read().decode('utf-8'))
-            break
-
-    return data
+    availability = [""]*len(urls)
+    count = 0
+    for i, url in enumerate(urls):
+        while True:
+            try:
+                # get API response
+                response = urllib.request.urlopen(url)
+            except IOError:
+                pass # retry
+            else: # if no IOError occurs
+                status = json.loads(response.read().decode('utf-8'))['status']
+                availability[i] = (status=='OK')
+                break
+        if availability[i]:
+            count += 1
+        if count == limit:
+            return availability[: i + 1]
+    return availability
 
 def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
                           field_of_view=120, angle=0, search_radius=50, outdoor=True, image_size="640x640",
@@ -173,16 +187,23 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             pass
 
         # randomly pick 'n_images' locations within 'radius' km radius
-        locations = [""]*n_images
-        for j in range(n_images):
-            while True:
-                direction = npr.uniform(0, 2 * np.pi)
-                distance = npr.uniform(0, rad)
-                loc = get_lat_lon(lat_lon, distance, direction)
-                metadata = get_street_view_metadata(API_key, loc, search_radius, outdoor)
-                if metadata['status'] == 'OK':
-                    break
-            locations[j] = loc
+        ###############for j in range(n_images):
+        count = n_images
+        while True:
+            direction = npr.uniform(0, 2 * np.pi, int(n_images*1.5))
+            distance = npr.uniform(0, rad, int(n_images*1.5))
+            loc = get_lat_lon(lat_lon, distance, direction)
+            available = is_gsv_available(API_key, loc, search_radius, outdoor, count)
+            loc_valid_new = loc[available].reset_index(drop=True)
+            try:
+                loc_valid = loc_valid.append(loc_valid_new, ignore_index)
+            except NameError:
+                loc_valid = loc_valid_new
+            if len(loc_valid) >= n_images:
+                locations = loc_valid[:count]
+                break
+            else: # if not enough available locations are randomly chosen yet
+                count -= len(loc_valid)
 
         # crate URLs
         # check https://developers.google.com/maps/documentation/streetview/intro for details of API
