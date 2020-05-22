@@ -151,7 +151,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         locations = [""]*n_images
         for j in range(n_images):
             while True:
-                direction = npr.uniform(0, np.pi)
+                direction = npr.uniform(0, 2 * np.pi)
                 distance = npr.uniform(0, rad)
                 loc = get_lat_lon(lat_lon, distance, direction)
                 metadata = get_street_view_metadata(API_key, loc, search_radius, outdoor)
