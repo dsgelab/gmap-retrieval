@@ -258,7 +258,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 if os.path.exists(file_name):
                     j += 1
                 else:
-                    new_file_names[k] = file_name
+                    new_file_names[k] = f"image{j}.png"
                     break
 
             while True:
@@ -276,8 +276,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 bar.update(1)
 
         # save a CSV file that contains location information about the saved street view images
-        loc_data = pd.DataFrame({'name': "image" + pd.Series(new_file_names).astype(str) + ".png",
-                                  'location': np.array(loc_valid)})
+        loc_data = pd.DataFrame({'name': new_file_names, 'location': loc_valid})
 
         csv_path = f"{sub_dir}/loc.csv"
         if os.path.exists(csv_path):
