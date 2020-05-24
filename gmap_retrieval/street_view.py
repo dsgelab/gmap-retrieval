@@ -217,7 +217,6 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 break
             elif n_images * limit < trial_count: # if there are not enough locations where GSV images are available
                 print(f"After checking {trial_count} locations for GSV images, there're not enought data around the location where ID = {ID}")
-                bar.update(count)
                 break
             else: # if not enough available locations are randomly chosen yet, go back to get candidates
                 count -= len(loc_valid)
@@ -268,6 +267,9 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                         break
             if print_progress:
                 bar.update(1)
+
+        if print_progress & len(urls) < n_images:
+            bar.update(n_images - len(urls))
 
         # save a CSV file that contains location information about the saved street view images
         loc_data = pd.DataFrame({'name': "image" + pd.Series(range(len(urls))).astype(str)[skip_image==0] + ".png",
