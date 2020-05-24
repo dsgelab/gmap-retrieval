@@ -278,7 +278,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 bar.update(1)
 
         if print_progress: # in case enough GSV images were not available
-            bar.update(count)
+            bar.update(n_images - n_existing_images - len(urls))
 
         # save a CSV file that contains location information about the saved street view images
         loc_data = pd.DataFrame({'name': new_file_names, 'location': loc_valid})
