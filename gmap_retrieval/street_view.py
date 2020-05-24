@@ -230,7 +230,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         if camera_direction == -2:
             heading = ""
         elif camera_direction == -1:
-            heading = "&heading=" + pd.Series(npr.uniform(0, 360, n_images).astype(str))
+            heading = "&heading=" + pd.Series(npr.uniform(0, 360, len(location)).astype(str))
         else: #when camera_direction is given
             heading = "&heading=" + pd.Series(camera_direction)
         fov = "&fov=" + str(field_of_view)
@@ -244,7 +244,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
 
         urls = prefix + location + size + heading + fov + pitch + radius + source + key
 
-        skip_image = np.zeros(n_images)
+        skip_image = np.zeros(len(urls))
         # get and save Street View images using Google Street View Static API
         for j in range(len(urls)):
             url = urls[j]
@@ -269,7 +269,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 bar.update(1)
 
         # save a CSV file that contains location information about the saved street view images
-        locations = pd.DataFrame({'name': "image" + pd.Series(range(n_images)).astype(str)[skip_image==0] + ".png",
+        locations = pd.DataFrame({'name': "image" + pd.Series(range(len(urls))).astype(str)[skip_image==0] + ".png",
                                   'location': np.array(locations)[skip_image==0]})
 
         csv_path = f"{sub_dir}/loc.csv"
