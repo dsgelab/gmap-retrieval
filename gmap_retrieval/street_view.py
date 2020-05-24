@@ -191,7 +191,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
 
         else: # if there are already n_images png images in the sub-directory
             n_existing_images = len(fnmatch.filter(os.listdir(sub_dir), '*.png'))
-            if n_existing_images == n_images:
+            if n_existing_images == n_images: # if there are 'n_images' images in the sub directory
                 if print_progress:
                     bar.update(n_images)
                 continue
@@ -207,11 +207,11 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         candidate_multiple = 1.5
         while True:
             # randomly pick 'n_needed_images' * 'candidate_multiple' candidates for locations around 'lat_lon'
-            direction = npr.uniform(0, 2 * np.pi, int(n_needed_images * candidate_multiple))
-            distance = npr.uniform(0, rad, int(n_needed_images * candidate_multiple))
+            direction = npr.uniform(0, 2 * np.pi, int(n_images * candidate_multiple))
+            distance = npr.uniform(0, rad, int(n_images * candidate_multiple))
             loc = get_lat_lon(lat_lon, distance, direction)
             # check if GSV is available for randonly picked 'n_needed_images' * 'candidate_multiple' locations
-            available = is_gsv_available(API_key, loc, search_radius, outdoor, n_needed_images)
+            available = is_gsv_available(API_key, loc, search_radius, outdoor, n_images)
             loc_valid_new = loc[available].reset_index(drop=True)
             try: # case of the non-first loop
                 loc_valid = loc_valid.append(loc_valid_new, ignore_index)
@@ -222,9 +222,10 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 break
             elif n_images * limit < trial_count: # if there are not enough locations where GSV images are available
                 print(f"After checking {trial_count} locations for GSV images, only {len(loc_valid)} + pre-existing {n_existing_images} GSV images found around the location where ID = {ID}")
+                bar.update(count)
                 break
             else: # if not enough available locations are randomly chosen yet, go back to get candidates
-                trial_count += n_needed_images * candidate_multiple
+                trial_count += n_images * candidate_multiple
                 count -= len(loc_valid_new)
 
         # crate URLs
