@@ -187,28 +187,29 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             pass
 
         # randomly pick 'n_images' locations within 'radius' km radius
-        ###############for j in range(n_images):
         count = n_images
         while True:
+            # randomly pick 'n_images' * 1.5 candidates for locations where GSV is available
             direction = npr.uniform(0, 2 * np.pi, int(n_images*1.5))
             distance = npr.uniform(0, rad, int(n_images*1.5))
             loc = get_lat_lon(lat_lon, distance, direction)
+            # check if GSV is available for randonly picked 'n_images' * 1.5 locations
             available = is_gsv_available(API_key, loc, search_radius, outdoor, count)
             loc_valid_new = loc[available].reset_index(drop=True)
-            try:
+            try: # case of the non-first loop
                 loc_valid = loc_valid.append(loc_valid_new, ignore_index)
-            except NameError:
+            except NameError: # case of the first loop
                 loc_valid = loc_valid_new
-            if len(loc_valid) >= n_images:
+            if len(loc_valid) >= n_images: # when having enought locations
                 locations = loc_valid[:count]
                 break
-            else: # if not enough available locations are randomly chosen yet
+            else: # if not enough available locations are randomly chosen yet, go back to get candidates
                 count -= len(loc_valid)
 
         # crate URLs
         # check https://developers.google.com/maps/documentation/streetview/intro for details of API
         prefix = "https://maps.googleapis.com/maps/api/streetview?"
-        location = "location=" + pd.Series(locations)
+        location = "location=" + loc_valid
         size = "&size=" + image_size
         if camera_direction == -2:
             heading = ""
