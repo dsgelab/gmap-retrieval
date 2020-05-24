@@ -119,7 +119,7 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
 
 def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
                           field_of_view=120, angle=0, search_radius=50, outdoor=True, image_size="640x640",
-                          print_progress=True, if_jupyter=False):
+                          limit=10, print_progress=True, if_jupyter=False):
     """Save Google Street View images around specified locations using Street View Satatic API.
 
     Parameters
@@ -156,6 +156,9 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         whether or not to limit the search to outdoor photos
     image_size: str, optional (default="400x400")
         the rectangular dimensions of the map image;  takes the form {horizontal_value}x{vertical_value}
+    limit: int
+        limit the number of trials to find GSV images
+        n_images * limit would be the number of candidate locations to check if GSV available around the area
     print_progress: boolean, optional (default=True)
         whether or not to print the progress bar of the data retrieval
     if_jupyter: boolean, optional (default=False)
@@ -195,10 +198,12 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
 
         # randomly pick 'n_images' locations within 'radius' km radius
         count = n_images
+        trial_count = 0
+        candidate_multiple = 1.5
         while True:
-            # randomly pick 'n_images' * 1.5 candidates for locations where GSV is available
-            direction = npr.uniform(0, 2 * np.pi, int(n_images*1.5))
-            distance = npr.uniform(0, rad, int(n_images*1.5))
+            # randomly pick 'n_images' * 'candidate_multiple' candidates for locations around 'lat_lon'
+            direction = npr.uniform(0, 2 * np.pi, int(n_images*candidate_multiple))
+            distance = npr.uniform(0, rad, int(n_images*candidate_multiple))
             loc = get_lat_lon(lat_lon, distance, direction)
             # check if GSV is available for randonly picked 'n_images' * 1.5 locations
             available = is_gsv_available(API_key, loc, search_radius, outdoor, count)
@@ -210,8 +215,12 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             if len(loc_valid) >= n_images: # when having enought locations
                 locations = loc_valid[:count]
                 break
+            elif n_images * limit < trial_count:
+                print(f"After checking {trial_count} locations for GSV images, there're not enought data around the location where ID = {ID}")
+                break
             else: # if not enough available locations are randomly chosen yet, go back to get candidates
                 count -= len(loc_valid)
+                trial_count += n_images * candidate_multiple
 
         # crate URLs
         # check https://developers.google.com/maps/documentation/streetview/intro for details of API
