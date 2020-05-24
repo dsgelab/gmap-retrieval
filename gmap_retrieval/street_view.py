@@ -250,13 +250,15 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         urls = prefix + location + size + heading + fov + pitch + radius + source + key
 
         # get and save Street View images using Google Street View Static API
+        new_file_names = [""]*len(urls)
         j = 0
-        for url in urls:
+        for k, url in enumerate(urls):
             while True: # find unused file name
                 file_name = f"{sub_dir}/image{j}.png"
                 if os.path.exists(file_name):
                     j += 1
                 else:
+                    new_file_names[k] = file_name
                     break
 
             while True:
@@ -274,7 +276,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 bar.update(1)
 
         # save a CSV file that contains location information about the saved street view images
-        loc_data = pd.DataFrame({'name': "image" + pd.Series(range(len(urls))).astype(str) + ".png",
+        loc_data = pd.DataFrame({'name': "image" + pd.Series(new_file_names).astype(str) + ".png",
                                   'location': np.array(loc_valid)})
 
         csv_path = f"{sub_dir}/loc.csv"
