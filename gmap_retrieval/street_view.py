@@ -187,16 +187,17 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         # if the sub-directory doesn't exist, create a new one
         if not os.path.exists(sub_dir):
             os.mkdir(sub_dir)
+            n_existing_images = 0
 
         else: # if there are already n_images png images in the sub-directory
-            n_exisiting_images = len(fnmatch.filter(os.listdir(sub_dir), '*.png'))
+            n_existing_images = len(fnmatch.filter(os.listdir(sub_dir), '*.png'))
             if n_existing_images == n_images:
                 if print_progress:
                     bar.update(n_images)
                 continue
             else: # if there are some images saved previously, but less than 'n_images'
                 if print_progress:
-                    bar.update(n_exisiting_images)
+                    bar.update(n_existing_images)
                 pass
 
         # randomly pick 'n_images' locations within 'radius' km radius
