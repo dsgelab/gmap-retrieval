@@ -43,7 +43,7 @@ get_street_view_image(directory_name='street_view', API_key=key,
                       n_images=10, rad=1, camera_direction=-1,
                       field_of_view=120, angle=0, search_radius=100,
                       outdoor=True, image_size="640x640",
-                      print_progress=True, if_jupyter==False)
+                      limit=10, print_progress=True, if_jupyter==False)
 
 # get data of nearby restaurants on Google Maps
 # around the locations in the 'data' variables

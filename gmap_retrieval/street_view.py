@@ -213,7 +213,7 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             except NameError: # case of the first loop
                 loc_valid = loc_valid_new
             if len(loc_valid) >= n_images: # when having enought locations
-                locations = loc_valid[:count]
+                loc_valid = loc_valid[:count]
                 break
             elif n_images * limit < trial_count:
                 print(f"After checking {trial_count} locations for GSV images, there're not enought data around the location where ID = {ID}")
@@ -269,13 +269,13 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                 bar.update(1)
 
         # save a CSV file that contains location information about the saved street view images
-        locations = pd.DataFrame({'name': "image" + pd.Series(range(len(urls))).astype(str)[skip_image==0] + ".png",
-                                  'location': np.array(locations)[skip_image==0]})
+        loc_data = pd.DataFrame({'name': "image" + pd.Series(range(len(urls))).astype(str)[skip_image==0] + ".png",
+                                  'location': np.array(loc_valid)[skip_image==0]})
 
         csv_path = f"{sub_dir}/loc.csv"
         if os.path.exists(csv_path):
             with open(csv_path, "a") as f:
-                locations.to_csv(f, index=False, header=False)
+                loc_data.to_csv(f, index=False, header=False)
         else:
             with open(csv_path, 'w') as f:
-                locations.to_csv(f, index=False)
+                loc_data.to_csv(f, index=False)
