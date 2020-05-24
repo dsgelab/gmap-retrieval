@@ -200,31 +200,32 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
                     bar.update(n_existing_images)
                 pass
 
-        # randomly pick 'n_images' locations within 'radius' km radius
-        count = n_images
+        # randomly pick 'n_needed_images' locations within 'radius' km radius
+        n_needed_images = n_images - n_existing_images
+        count = n_needed_images
         trial_count = 0
         candidate_multiple = 1.5
         while True:
-            # randomly pick 'n_images' * 'candidate_multiple' candidates for locations around 'lat_lon'
-            direction = npr.uniform(0, 2 * np.pi, int(n_images*candidate_multiple))
-            distance = npr.uniform(0, rad, int(n_images*candidate_multiple))
+            # randomly pick 'n_needed_images' * 'candidate_multiple' candidates for locations around 'lat_lon'
+            direction = npr.uniform(0, 2 * np.pi, int(n_needed_images * candidate_multiple))
+            distance = npr.uniform(0, rad, int(n_needed_images * candidate_multiple))
             loc = get_lat_lon(lat_lon, distance, direction)
-            # check if GSV is available for randonly picked 'n_images' * 1.5 locations
-            available = is_gsv_available(API_key, loc, search_radius, outdoor, count)
+            # check if GSV is available for randonly picked 'n_needed_images' * 'candidate_multiple' locations
+            available = is_gsv_available(API_key, loc, search_radius, outdoor, n_needed_images)
             loc_valid_new = loc[available].reset_index(drop=True)
             try: # case of the non-first loop
                 loc_valid = loc_valid.append(loc_valid_new, ignore_index)
             except NameError: # case of the first loop
                 loc_valid = loc_valid_new
-            if len(loc_valid) >= n_images: # when having enought locations
-                loc_valid = loc_valid[:count]
+            if len(loc_valid) >= n_needed_images: # when having enought locations
+                loc_valid = loc_valid[:n_needed_images]
                 break
             elif n_images * limit < trial_count: # if there are not enough locations where GSV images are available
-                print(f"After checking {trial_count} locations for GSV images, only {len(loc_valid)} GSV images found around the location where ID = {ID}")
+                print(f"After checking {trial_count} locations for GSV images, only {len(loc_valid)} + pre-existing {n_existing_images} GSV images found around the location where ID = {ID}")
                 break
             else: # if not enough available locations are randomly chosen yet, go back to get candidates
-                count -= len(loc_valid)
-                trial_count += n_images * candidate_multiple
+                trial_count += n_needed_images * candidate_multiple
+                count -= len(loc_valid_new)
 
         # crate URLs
         # check https://developers.google.com/maps/documentation/streetview/intro for details of API
@@ -248,33 +249,33 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
 
         urls = prefix + location + size + heading + fov + pitch + radius + source + key
 
-        skip_image = np.zeros(len(urls))
         # get and save Street View images using Google Street View Static API
-        for j in range(len(urls)):
-            url = urls[j]
-            file_name = f"{sub_dir}/image{j}.png"
-            # if a spacific image already exists
-            if os.path.exists(file_name):
-                skip_image[j] = 1
+        j = 0
+        for url in urls:
+            while True: # find unused file name
+                file_name = f"{sub_dir}/image{j}.png"
+                if os.path.exists(file_name):
+                    j += 1
+                else:
+                    break
 
-            else:
-                while True:
-                    try:
-                        # get API response
-                        image = urllib.request.urlopen(url).read()
-                    except IOError:
-                        pass # retry
-                    else:
-                        # save the png image
-                        with open(file_name, mode="wb") as f:
-                            f.write(image)
-                        break
+            while True:
+                try:
+                    # get API response
+                    image = urllib.request.urlopen(url).read()
+                except IOError:
+                    pass # retry
+                else:
+                    # save the png image
+                    with open(file_name, mode="wb") as f:
+                        f.write(image)
+                    break
             if print_progress:
                 bar.update(1)
 
         # save a CSV file that contains location information about the saved street view images
-        loc_data = pd.DataFrame({'name': "image" + pd.Series(range(len(urls))).astype(str)[skip_image==0] + ".png",
-                                  'location': np.array(loc_valid)[skip_image==0]})
+        loc_data = pd.DataFrame({'name': "image" + pd.Series(range(len(urls))).astype(str) + ".png",
+                                  'location': np.array(loc_valid)})
 
         csv_path = f"{sub_dir}/loc.csv"
         if os.path.exists(csv_path):
