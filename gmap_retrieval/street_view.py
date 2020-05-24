@@ -26,15 +26,22 @@ def get_lat_lon(loc, d, tc):
         location(s), specified by latitude and longitude, that is 'd' km away from 'loc' in direction 'tc'
         each location needs to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
     """
-    if type(loc)==str:
-        loc = [loc]
-        d = [d]
-        tc =[tc]
+    if type(d) != type(tc):
+        raise ValueError("d and tc has to be same type: float or list of float.")
 
-    if len(loc)!=len(d) or len(loc)!=len(tc) or len(d)!=len(tc):
+    elif type(loc)==str:
+        if type(d)==float:
+            loc = [loc]
+            d = [d]
+            tc =[tc]
+
+    elif type(d) == float:
+        raise TypeError("If type of loc is list, type of d and tc have to be both list of float.")
+
+    elif len(loc)!=len(d) or len(loc)!=len(tc) or len(d)!=len(tc):
         raise ValueError("The lengths of loc, d and tc have to be same.")
 
-    loc = np.array([l.split(",") for l in loc], dtype=float)
+    loc = np.array([loc.split(",")], dtype=float)
     d = np.array(d)
     tc = np.array(tc)
 
