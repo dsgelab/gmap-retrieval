@@ -215,8 +215,9 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             if len(loc_valid) >= n_images: # when having enought locations
                 loc_valid = loc_valid[:count]
                 break
-            elif n_images * limit < trial_count:
+            elif n_images * limit < trial_count: # if there are not enough locations where GSV images are available
                 print(f"After checking {trial_count} locations for GSV images, there're not enought data around the location where ID = {ID}")
+                bar.update(count)
                 break
             else: # if not enough available locations are randomly chosen yet, go back to get candidates
                 count -= len(loc_valid)
