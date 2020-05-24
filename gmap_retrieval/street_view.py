@@ -98,7 +98,7 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
 
     urls = prefix + location + source + radius + key
 
-    availability = [""]*len(urls)
+    availability = [False]*len(urls)
     count = 0
     for i, url in enumerate(urls):
         while True:
@@ -114,7 +114,7 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
         if availability[i]:
             count += 1
         if count == limit:
-            return availability[: i + 1]
+            return availability
     return availability
 
 def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
