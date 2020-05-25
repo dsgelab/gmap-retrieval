@@ -305,7 +305,6 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
             source = ""
         key = "&key=" + API_key
 
-
         urls = prefix + location + size + heading + fov + pitch + radius + source + key
 
         # add digital signature if provided
