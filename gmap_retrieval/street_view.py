@@ -34,7 +34,7 @@ def sign_url(input_urls=None, secret=None):
     if type(input_urls) is str:
         input_urls = pd.Series([input_urls])
 
-    signed_urls = []*len(input_urls)
+    signed_urls = [""]*len(input_urls)
     for i, input_url in enumerate(input_urls):
         url = urlparse.urlparse(input_url)
 
