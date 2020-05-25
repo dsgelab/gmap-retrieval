@@ -28,7 +28,7 @@ def sign_url(input_urls=None, secret=None):
         The signed request URL
       """
 
-    if not input_urls or not secret:
+    if (input_urls is None) or (secret is None):
         raise Exception("Both input_urls and secret are required")
 
     if type(input_urls) is str:
