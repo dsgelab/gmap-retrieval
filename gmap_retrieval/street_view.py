@@ -1,4 +1,7 @@
+import base64
 import fnmatch
+import hashlib
+import hmac
 import json
 import numpy as np
 import numpy.random as npr
@@ -6,6 +9,55 @@ import pandas as pd
 import os
 from tqdm import tqdm
 import urllib
+import urllib.parse as urlparse
+
+def sign_url(input_urls=None, secret=None):
+    """ Sign a request URL with a URL signing secret.
+    Based on code from https://developers.google.com/maps/documentation/streetview/get-api-key?hl=fi
+
+    Parameters
+    ----------
+    input_urls: str | pandas Series of str
+        The URL to sign
+    secret: str
+        Your URL signing secret
+
+    Returns
+    -------
+    signed_urls: list of str
+        The signed request URL
+      """
+
+    if not input_urls or not secret:
+        raise Exception("Both input_urls and secret are required")
+
+    if type(input_urls) is str:
+        input_urls = pd.Series([input_urls])
+
+    signed_urls = []*len(input_urls)
+    for i, input_url in enumerate(input_urls):
+        url = urlparse.urlparse(input_url)
+
+        # We only need to sign the path+query part of the string
+        url_to_sign = url.path + "?" + url.query
+
+        # Decode the private key into its binary format
+        # We need to decode the URL-encoded private key
+        decoded_key = base64.urlsafe_b64decode(secret)
+
+        # Create a signature using the private key and the URL-encoded
+        # string using HMAC SHA1. This signature will be binary.
+        signature = hmac.new(decoded_key, str.encode(url_to_sign), hashlib.sha1)
+
+        # Encode the binary signature into base64 for use within a URL
+        encoded_signature = base64.urlsafe_b64encode(signature.digest())
+
+        original_url = url.scheme + "://" + url.netloc + url.path + "?" + url.query
+
+        signed_urls[i] = original_url + "&signature=" + encoded_signature.decode()
+
+    # Return signed URL
+    return signed_urls
 
 def get_lat_lon(loc, d, tc):
     """Calculate the latitude and longitude of a place that is 'd' km away from 'loc' in direction 'tc'.
@@ -258,8 +310,7 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
 
         # add digital signature if provided
         if secret is not None:
-            signature = "&signature=" + secret
-            urls = urls + signature
+            urls = sign_url(urls, secret)
 
         # get and save Street View images using Google Street View Static API
         new_file_names = [""]*len(urls)

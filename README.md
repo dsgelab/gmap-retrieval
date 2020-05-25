@@ -39,7 +39,7 @@ get_satellite_image(directory_name="satellite_images", API_key=key,
 # get street view images from areas around the locations in the 'data' variable
 # this will store street view images in the directory "street_views"
 get_street_view_image(directory_name='street_view', API_key=key,
-                      IDs=data['id'], latitude_longitude=data['loc'],
+                      secret=None, IDs=data['id'], latitude_longitude=data['loc'],
                       n_images=10, rad=1, camera_direction=-1,
                       field_of_view=120, angle=0, search_radius=100,
                       outdoor=True, image_size="640x640",
