@@ -184,6 +184,8 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
     secret: str | None
         signature for authentication for Google static street view API requests
         if None, no digital signature is used
+        if you retrieve large amount of data, you might be required to set secret;
+            check https://developers.google.com/maps/documentation/streetview/usage-and-billing#authenticating-requests
     IDs: pandas Series [n_locations]
         list of IDs that identify locations
     latitude_longitude: pandas Series [n_locations]
