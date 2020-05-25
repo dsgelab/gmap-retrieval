@@ -117,9 +117,10 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
             return availability
     return availability
 
-def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_images, rad=1, camera_direction=-1,
-                          field_of_view=120, angle=0, search_radius=50, outdoor=True, image_size="640x640",
-                          limit=10, print_progress=True, if_jupyter=False):
+def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitude, n_images,
+                          rad=1, camera_direction=-1, field_of_view=120, angle=0, search_radius=50,
+                          outdoor=True, image_size="640x640", limit=10, print_progress=True,
+                          if_jupyter=False):
     """Save Google Street View images around specified locations using Street View Satatic API.
 
     Parameters
@@ -128,6 +129,9 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
         name of a new directory containing all the saved images
     API_key: str
         key for Google Map API
+    secret: str | None
+        signature for authentication for Google static street view API requests
+        if None, no digital signature is used
     IDs: pandas Series [n_locations]
         list of IDs that identify locations
     latitude_longitude: pandas Series [n_locations]
@@ -249,7 +253,13 @@ def get_street_view_image(directory_name, API_key, IDs, latitude_longitude, n_im
             source = ""
         key = "&key=" + API_key
 
+
         urls = prefix + location + size + heading + fov + pitch + radius + source + key
+
+        # add digital signature if provided
+        if secret is not None:
+            signature = "&signature=" + secret
+            urls = urls + signature
 
         # get and save Street View images using Google Street View Static API
         new_file_names = [""]*len(urls)
