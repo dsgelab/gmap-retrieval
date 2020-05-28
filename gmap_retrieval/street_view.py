@@ -235,7 +235,14 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
 
-    def collect_gsv_images_for_each_id(id_, lat_lon):
+    def collect_gsv_images_for_each_id(i):
+        # go through each specified location
+        if verbose:
+            bar = tqdm(total=len(IDs) * n_images, mininterval=0, maxinterval=10, miniters=1)
+
+        id_ = str(IDs[i])
+        lat_long = latitude_longitude[i]
+
         # create a sub-directory in which 'n_images' Google Street View images around the specified location are saved
         sub_dir = f"{directory_name}/{id_}"
 
@@ -350,8 +357,4 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
             with open(csv_path, 'w') as f:
                 loc_data.to_csv(f, index=False)
 
-    # go through each specified location
-    if verbose:
-        bar = tqdm(total=len(IDs) * n_images, mininterval=0, maxinterval=10, miniters=1)
-
-    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(str(IDs[i]), latitude_longitude[i]) for i in range(len(IDs))] )
+    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(i) for i in range(len(IDs))] )
