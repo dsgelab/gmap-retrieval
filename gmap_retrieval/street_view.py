@@ -241,7 +241,7 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
             bar = tqdm(total=len(IDs) * n_images, mininterval=0, maxinterval=10, miniters=1)
 
         id_ = str(IDs[i])
-        lat_long = latitude_longitude[i]
+        lat_lon = latitude_longitude[i]
 
         # create a sub-directory in which 'n_images' Google Street View images around the specified location are saved
         sub_dir = f"{directory_name}/{id_}"
