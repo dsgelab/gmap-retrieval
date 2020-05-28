@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import urllib
 
-def get_reviews(directory_name, API_key, place_id, print_progress=True):
+def get_reviews(directory_name, API_key, place_id, verbose=True):
     """Retrieve and save reviews of properties through Google Map Places Details API as json files.
 
     Parameters
@@ -14,7 +14,7 @@ def get_reviews(directory_name, API_key, place_id, print_progress=True):
         key for Google Map API
     place_id: list
         list of place IDs of Google Map of which the method get reviews
-    print_progress: boolean, optional (default=True)
+    verbose: boolean, optional (default=True)
         whether or not to print the progress of the data retrieval
     """
     if not os.path.exists(directory_name):
@@ -31,21 +31,21 @@ def get_reviews(directory_name, API_key, place_id, print_progress=True):
         url = urls[i]
 
         if os.path.exists(f"{directory_name}/{place_id[i]}.json"):
-            if print_progress:
+            if verbose:
                 print(f"{directory_name}/{place_id[i]}.json already exists.")
             continue
 
         while True:
             try:
                 # get API response
-                if print_progress:
+                if verbose:
                     print("API request made.")
                 response = urllib.request.urlopen(url)
             except IOError:
                 pass # retry
             else: # if no IOError occurs
                 data = json.loads(response.read().decode('utf-8'))
-                if print_progress:
+                if verbose:
                     print(f"...Created {directory_name}/{place_id[i]}.json")
                 with open(f"{directory_name}/{place_id[i]}.json", "w") as f:
                     json.dump(data, f)

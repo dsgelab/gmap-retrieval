@@ -2,6 +2,7 @@ import base64
 import fnmatch
 import hashlib
 import hmac
+from joblib import Parallel, delayed
 import json
 import numpy as np
 import numpy.random as npr
@@ -171,7 +172,7 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
 
 def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitude, n_images,
                           rad=1, camera_direction=-1, field_of_view=120, angle=0, search_radius=50,
-                          outdoor=True, image_size="640x640", limit=10, print_progress=True,
+                          outdoor=True, image_size="640x640", limit=10, n_jobs=1, verbose=True,
                           if_jupyter=False):
     """Save Google Street View images around specified locations using Street View Satatic API.
 
@@ -217,10 +218,12 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
     limit: int
         limit the number of trials to find GSV images
         n_images * limit would be the number of candidate locations to check if GSV available around the area
-    print_progress: boolean, optional (default=True)
+    n_jobs: int, optional (default=1)
+        The number of processes (=number of CPU cores) to use. Specify -1 to use all available cores.
+    verbose: boolean, optional (default=True)
         whether or not to print the progress bar of the data retrieval
     if_jupyter: boolean, optional (default=False)
-        whether or not the program is running on Jupyter; this matters only if print_progress==True
+        whether or not the program is running on Jupyter; this matters only if verbose==True
     """
     if len(IDs) != len(latitude_longitude):
         raise ValueError("The lengths of IDs and latitude_longitude have to be same.")
@@ -232,15 +235,9 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
 
-    # go through each specified location
-    if print_progress:
-        bar = tqdm(total=len(IDs) * n_images, mininterval=0, maxinterval=10, miniters=1)
-    for i in range(len(IDs)):
-        ID = str(IDs[i])
-        lat_lon = latitude_longitude[i]
-
+    def collect_gsv_images_for_each_id(id_, lat_lon):
         # create a sub-directory in which 'n_images' Google Street View images around the specified location are saved
-        sub_dir = f"{directory_name}/{ID}"
+        sub_dir = f"{directory_name}/{id_}"
 
         # if the sub-directory doesn't exist, create a new one
         if not os.path.exists(sub_dir):
@@ -250,11 +247,11 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
         else: # if there are already n_images png images in the sub-directory
             n_existing_images = len(fnmatch.filter(os.listdir(sub_dir), '*.png'))
             if n_existing_images == n_images: # if there are 'n_images' images in the sub directory
-                if print_progress:
+                if verbose:
                     bar.update(n_images)
                 continue
             else: # if there are some images saved previously, but less than 'n_images'
-                if print_progress:
+                if verbose:
                     bar.update(n_existing_images)
                 pass
 
@@ -280,7 +277,7 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
                 count = 0
                 break
             elif n_images * limit < trial_count: # if there are not enough locations where GSV images are available
-                print(f"After checking {trial_count} locations for GSV images, only {len(loc_valid)} + pre-existing {n_existing_images} GSV images found around the location where ID = {ID}")
+                print(f"After checking {trial_count} locations for GSV images, only {len(loc_valid)} + pre-existing {n_existing_images} GSV images found around the location where id_ = {id_}")
                 count -= len(loc_valid_new)
                 break
             else: # if not enough available locations are randomly chosen yet, go back to get candidates
@@ -336,10 +333,10 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
                     with open(file_name, mode="wb") as f:
                         f.write(image)
                     break
-            if print_progress:
+            if verbose:
                 bar.update(1)
 
-        if print_progress: # in case enough GSV images were not available
+        if verbose: # in case enough GSV images were not available
             bar.update(n_images - n_existing_images - len(urls))
 
         # save a CSV file that contains location information about the saved street view images
@@ -352,3 +349,9 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
         else:
             with open(csv_path, 'w') as f:
                 loc_data.to_csv(f, index=False)
+
+    # go through each specified location
+    if verbose:
+        bar = tqdm(total=len(IDs) * n_images, mininterval=0, maxinterval=10, miniters=1)
+
+    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(str(IDs[i]), latitude_longitude[i]) for i in range(len(IDs))] )

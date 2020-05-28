@@ -73,7 +73,7 @@ def concat_next_page(data, next_page):
     # concat 'results'
     data['results'].extend(next_page["results"])
 
-def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1, place_types=None, print_progress=True):
+def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1, place_types=None, verbose=True):
     """Get a list of places around specific locations specified by latitudes and longitudes using Google Maps Place Search API.
 
     Note that maximum number of properties you can obstain from this method
@@ -102,7 +102,7 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
             to make that sure, re-check the 'types' property in the collected json files
         Hence, alternatively, you can put a list of any key words here instead of place types of Google Map,
             then all properties matching with any of the key words are returned
-    print_progress: boolean, optional (default=True)
+    verbose: boolean, optional (default=True)
         whether or not to print the progress of the data retrieval
     """
 
@@ -156,7 +156,7 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
             url = urls[j]
             place_type = place_types[j]
             if os.path.exists(f"{directory}/{lower_dir}/{place_type}.json"):
-                if print_progress:
+                if verbose:
                     print(f"{directory}/{lower_dir}/{place_type}.json already exists.")
                 continue
 
@@ -170,7 +170,7 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
                 except KeyError:
                     break # no additional list
                 else: # get the next page
-                    if print_progress:
+                    if verbose:
                         print("...Get next page.")
                     pagetoken = "pagetoken=" + next_page_token
                     next_page_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" + pagetoken + key
@@ -182,18 +182,18 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
 
             # save into json file
             if status == 'OK':
-                if print_progress:
+                if verbose:
                     print(f"...Created {directory}/{lower_dir}/{place_type}.json")
                 with open(f"{directory}/{lower_dir}/{place_type}.json", "w") as f:
                     json.dump(data, f)
             elif status == 'ZERO_RESULTS':
-                if print_progress:
+                if verbose:
                     print(f"...Created {directory}/{lower_dir}/{place_type}.json; No result for {ID}-{place_type}")
                 with open(f"{directory}/{lower_dir}/{place_type}.json", "w") as f:
                     json.dump(data, f)
             else:
                 print(f"The status of response is: {status} for {ID}-{place_type}.")
-        if print_progress:
+        if verbose:
             print(f"Finished retrieving data for {ID}\n")
 
 def create_csv_nearby_places(directory_name, place_types, file_name=None):

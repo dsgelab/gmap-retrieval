@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-__version__ = '0.1.44'
+__version__ = '0.1.45'
 
 setup(
     name='gmap_retrieval',
@@ -13,5 +13,5 @@ setup(
     long_description=open('README.md').read(),
     license='MIT',
     packages=find_packages(exclude=('tests')),
-    install_requires=['numpy', 'pandas', 'tqdm'],
+    install_requires=['numpy', 'pandas', 'tqdm', 'joblib'],
 )

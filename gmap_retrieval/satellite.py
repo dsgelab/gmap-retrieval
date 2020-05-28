@@ -45,11 +45,11 @@ def find_zoom_level(latitudes, horizontal_coverage, image_size, image_ratio):
         else: # a bit smaller coverage is closer to the ideal coverage
             zoom_levels[index] = zoom - 1
             actual_horizontal_coverage[index] = prev_horizontal_coverage_in_km
-            
+
     return zoom_levels.astype(int), actual_horizontal_coverage
 
 def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizontal_coverage=2, image_size=640, image_ratio=1,
-                        image_scale=1, image_format="png", print_progress=True):
+                        image_scale=1, image_format="png", verbose=True):
     """Save satellite images for specified locations using Google Maps Satatic API.
 
     Parameters
@@ -74,7 +74,7 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizo
         scaling on the size
     image_format: str, optional (default="png")
         format of output images
-    print_progress: boolean, optional (default=True)
+    verbose: boolean, optional (default=True)
         whether or not to print the progress of the data retrieval
     """
     # find the best zoom levels to feed into Google Maps Static API and resulting side lengths of satellite images
@@ -108,21 +108,21 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizo
         file_name = directory_name + "/" + str(IDs[i]) + ".png"
 
         if os.path.exists(file_name):
-            if print_progress:
+            if verbose:
                 print(f"{file_name} already exists.")
             skip_id[i] = 1
         else:
             while True:
                 try:
                     # get API response
-                    if print_progress:
+                    if verbose:
                         print(f"API request made: {IDs[i]}")
                     image = urllib.request.urlopen(url).read()
                 except IOError:
                     pass # retry
                 else:
                     # save the png image
-                    if print_progress:
+                    if verbose:
                         print(f"   Satellite image saved: {file_name}")
                     with open(file_name, mode="wb") as f:
                         f.write(image)
