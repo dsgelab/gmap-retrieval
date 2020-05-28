@@ -249,7 +249,7 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
             if n_existing_images == n_images: # if there are 'n_images' images in the sub directory
                 if verbose:
                     bar.update(n_images)
-                continue
+                return
             else: # if there are some images saved previously, but less than 'n_images'
                 if verbose:
                     bar.update(n_existing_images)
