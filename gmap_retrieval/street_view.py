@@ -237,13 +237,13 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
 
     def wrapped_in_tqdm(IDs):
         if verbose:
-            bar = tqdm(total=len(IDs), mininterval=0, maxinterval=10, miniters=1)
+            bar = tqdm(total=len(IDs), mininterval=0, maxinterval=2, miniters=1)
         for i in range(len(IDs)):
             if verbose:
                 bar.update(1)
             yield i
         if verbose:
-            bar.close
+            bar.close()
 
     def collect_gsv_images_for_each_id(i): # go through each specified location
         id_ = str(IDs[i])
@@ -354,4 +354,6 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
             with open(csv_path, 'w') as f:
                 loc_data.to_csv(f, index=False)
 
-    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(i) for i in wrapped_in_tqdm(IDs)] )
+    IDs_gen = wrapped_in_tqdm(IDs)
+
+    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(i) for i in IDs_gen] )
