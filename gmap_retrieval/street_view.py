@@ -235,11 +235,17 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
 
-    def collect_gsv_images_for_each_id(i):
-        # go through each specified location
+    def wrapped_in_tqdm(IDs):
         if verbose:
-            bar = tqdm(total=len(IDs) * n_images, mininterval=0, maxinterval=10, miniters=1)
+            bar = tqdm(total=len(IDs), mininterval=0, maxinterval=10, miniters=1)
+        for i in range(len(IDs)):
+            if verbose:
+                bar.update(1)
+            yield i
+        if verbose:
+            bar.close
 
+    def collect_gsv_images_for_each_id(i): # go through each specified location
         id_ = str(IDs[i])
         lat_lon = latitude_longitude[i]
 
@@ -254,12 +260,8 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
         else: # if there are already n_images png images in the sub-directory
             n_existing_images = len(fnmatch.filter(os.listdir(sub_dir), '*.png'))
             if n_existing_images == n_images: # if there are 'n_images' images in the sub directory
-                if verbose:
-                    bar.update(n_images)
                 return
             else: # if there are some images saved previously, but less than 'n_images'
-                if verbose:
-                    bar.update(n_existing_images)
                 pass
 
         # randomly pick 'n_needed_images' locations within 'radius' km radius
@@ -340,11 +342,6 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
                     with open(file_name, mode="wb") as f:
                         f.write(image)
                     break
-            if verbose:
-                bar.update(1)
-
-        if verbose: # in case enough GSV images were not available
-            bar.update(n_images - n_existing_images - len(urls))
 
         # save a CSV file that contains location information about the saved street view images
         loc_data = pd.DataFrame({'name': new_file_names, 'location': loc_valid})
@@ -357,4 +354,4 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
             with open(csv_path, 'w') as f:
                 loc_data.to_csv(f, index=False)
 
-    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(i) for i in range(len(IDs))] )
+    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(i) for i in wrapped_in_tqdm(IDs)] )
