@@ -8,7 +8,7 @@ import numpy as np
 import numpy.random as npr
 import pandas as pd
 import os
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import urllib
 import urllib.parse as urlparse
 
@@ -227,9 +227,6 @@ def get_street_view_image(directory_name, API_key, secret, IDs, latitude_longitu
     """
     if len(IDs) != len(latitude_longitude):
         raise ValueError("The lengths of IDs and latitude_longitude have to be same.")
-
-    if if_jupyter:
-        from tqdm.notebook import tqdm
 
     # create directory in which all the images are saved
     if not os.path.exists(directory_name):

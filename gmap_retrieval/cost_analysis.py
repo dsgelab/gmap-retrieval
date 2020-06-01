@@ -140,7 +140,7 @@ def calculate_cost(n_loc, price_table, n_api_calls_per_loc, extra_expense=0):
         n_calls_by_range = np.maximum(n_api_calls[index]-price_table.columns.values, 0)
         for i in range(len(n_calls_by_range)-1):
             n_calls_by_range[i] -= n_calls_by_range[i+1]
-        prices[index] = np.sum(n_calls_by_range*(price_table.loc['static_maps']/1000))
+        prices[index] = np.sum(n_calls_by_range*(price_table.loc[index]/1000))
 
     total = sum(prices.values()) + extra_expense
 
