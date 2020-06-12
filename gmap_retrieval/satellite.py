@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import urllib
 
-def find_zoom_level(latitudes, horizontal_coverage, image_size, image_ratio):
+def find_zoom_level(latitudes, horizontal_coverage, horizontal_size):
     """Find the best matching zoom level for Google Maps Static API.
 
     Parameters
@@ -48,7 +48,7 @@ def find_zoom_level(latitudes, horizontal_coverage, image_size, image_ratio):
 
     return zoom_levels.astype(int), actual_horizontal_coverage
 
-def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizontal_coverage=2, image_size=640, image_ratio=1,
+def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizontal_coverage=2, horizontal_size=640, image_ratio=1,
                         image_scale=1, image_format="png", verbose=True):
     """Save satellite images for specified locations using Google Maps Satatic API.
 
