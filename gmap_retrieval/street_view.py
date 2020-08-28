@@ -1,7 +1,9 @@
 import base64
+import contextlib
 import fnmatch
 import hashlib
 import hmac
+import joblib
 from joblib import Parallel, delayed
 import json
 import numpy as np
@@ -61,7 +63,8 @@ def sign_url(input_urls=None, secret=None):
     return signed_urls
 
 def get_lat_lon(loc, d, tc):
-    """Calculate the latitude/longitude of place(s) that is 'd' km away from 'loc' in direction 'tc'.
+    """Calculate the latitude/longitude of place(s)
+    that is 'd' km away from 'loc' in direction 'tc'.
 
     Parameters
     ----------
@@ -90,17 +93,18 @@ def get_lat_lon(loc, d, tc):
     # if d is array-like
     if hasattr(d, '__len__'):
         if not hasattr(tc, '__len__'):
-            raise ValueError("d and tc needs be both float or both array-like.")
+            raise ValueError("d and tc needs be both float "
+                             "or both array-like.")
         elif len(d) != len(tc):
             raise ValueError("The lengths of d and tc needs to be same.")
           
     # if loc is array-like
     if hasattr(loc, '__len__') and not isinstance(loc, str):
         if not hasattr(d, '__len__'):
-            raise ValueError("If loc is array-like, both d and tc need to be"
+            raise ValueError("If loc is array-like, both d and tc need to be "
                              "array-like with same length.")
         if len(loc) != len(d):
-            raise ValueError("If loc is array-like, both d and tc need to be"
+            raise ValueError("If loc is array-like, both d and tc need to be "
                              "array-like with same length.")
     
     # if loc is not array-like
@@ -115,7 +119,8 @@ def get_lat_lon(loc, d, tc):
     
     circumference = 40075 #km
     if any(np.array(d) > circumference / 2):
-        raise ValueError(f"Distance must be smaller than {circumference / 2}.")
+        raise ValueError("Distance must be smaller "
+                         f"than {circumference / 2}.")
 
     if any(np.logical_or(np.array(tc) < 0, np.array(tc) > 2 * np.pi)):
         raise ValueError("Direction must be between 0 to 2 * Pi.")
@@ -144,29 +149,33 @@ def get_lat_lon(loc, d, tc):
     return lat_lon
 
 def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
-    """Check if Google street view image is available around specific location(s).
+    """Check if Google street view image is available given location(s).
     Check https://developers.google.com/maps/documentation/streetview/metadata
-    for details of API.
+    for details of Google Map API used in this function.
 
     Parameters
     ----------
     API_key: str
-        key for Google Map API
-    loc: numpy chararray
-        location(s) specified by latitude and longitude
-        each location needs to be a comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+        Key for Google Map API.
+    loc: numpy.chararray
+        Location(s) specified by latitude and longitude.
+        Each location needs to be a comma-separated {latitude,longitude} pair;
+        e.g. "40.714728,-73.998672"
     search_radius: int
-        a radius, specified in meters, in which to search for a panorama, centered on the given latitude and longitude
+        A radius, specified in meters, in which to search for a panorama,
+        centered on the given latitude and longitude.
     outdoor: boolean
-        whether or not to limit the search to outdoor photos
+        Whether or not to limit the search to outdoor photos.
     limit: int | None
-        the number of "OK" status of locations after which the function stops finding the status of further locations
-        if None, no limit is set
+        The number of "OK" status of locations after which
+        the function stops checking the status of further locations.
+        If None, the status of all the given locations are checked and returned.
 
     Returns
     -------
     availability: list of boolean
-        a list of whether a Google street view image is available around specific location(s)
+        A list of whether a Google street view image is available
+        around specific location(s).
     """
     if limit == None:
         limit = len(loc)
@@ -207,63 +216,69 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
                           search_radius=50, outdoor=True,
                           image_size="640x640", limit=10, n_jobs=1, 
                           verbose=True, if_jupyter=False):
-    """Save Google Street View images around specified locations using Street View Satatic API.
+    """Save Google Street View images around specified locations
+    using Street View Satatic API.
 
     Parameters
     ----------
     directory_name: str
-        name of a new directory containing all the saved images
+        Name of a new directory containing all the saved images.
+        If the directory doesn't exist, creates a new one.
     API_key: str
-        key for Google Map API
+        Key for Google Map API
     secret: str | None
-        signature for authentication for Google static street view API requests
-        if None, no digital signature is used
-        if you retrieve large amount of data, you might be required to set secret;
-            check https://developers.google.com/maps/documentation/streetview/usage-and-billing#authenticating-requests
+        Signature to authenticate Google static street view API requests.
+        If None, no digital signature is used.
+        If retrieving large amount of data, this variable might be required;
+        Check https://developers.google.com/maps/documentation/streetview/usage-and-billing#authenticating-requests
     IDs: pandas Series [n_locations]
-        list of IDs that identify locations
+        List of IDs that identify locations.
     latitude_longitude: pandas Series [n_locations]
-        list of locations specified by latitude and longitude;
-        each location needs to take the form of
-        comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
+        List of locations specified by latitude and longitude;
+        Each location needs to take the form of
+        comma-separated {latitude,longitude} pair;
+        e.g. "40.714728,-73.998672".
     n_images: int
-        the number of Google Street View images to be fetched for each ID
+        The number of Google Street View images to be fetched for each ID.
     rad: int, optional (default=1)
-        radius, specified in km, of a circle around the location,
+        Radius, specified in km, of a circle around the location,
         specified by latitude and longitude, in which
-        the Google Street View images are fetched
+        the Google Street View images are fetched.
     camera_direction: int, optional (default=-1)
-        the compass heading of the camera
-        Accepted values are from 0 to 360
-        (both values indicating North, with 90 indicating East, and 180 South),
+        The compass heading of the camera.
+        Accepted values are from 0 to 360.
+        (Both values indicating North, with 90 indicating East, and 180 South),
         -1, indicating random selection of headinv value from 0 to 360, and
         -2, indicating the heading value calculated to direct the camera
-        towards the location specified by latitude and longitude
+        towards the location specified by latitude and longitude.
     field_of_view: int, optional (default=120)
-        the horizontal field of view of the image; maximum is 120
+        The horizontal field of view of the image; maximum is 120.
     angle: int, optional (default=0)
-        the up or down angle of the camera relative to the Street View vehicle:
-        Positive values angle the camera up (with 90 degrees indicating straight up)
-        and negative values angle the camera down (with -90 indicating straight down)
+        The up / down angle of the camera relative to the Street View vehicle:
+        Positive values angle the camera up
+        (with 90 degrees indicating straight up)
+        and negative values angle the camera down
+        (with -90 indicating straight down)
     search_radius: int, optional (default=50)
-        a radius, specified in meters, in which to search for a panorama,
-        centered on the given latitude and longitude
+        A radius, specified in meters, in which to search for a panorama,
+        centered on the given latitude and longitude.
     outdoor: boolean, optional (default=True)
-        whether or not to limit the search to outdoor photos
+        Whether or not to limit the search to outdoor photos.
     image_size: str, optional (default="400x400")
-        the rectangular dimensions of the map image; 
-        takes the form {horizontal_value}x{vertical_value}
+        The rectangular dimensions of the map image; 
+        Takes the form {horizontal_value}x{vertical_value}.
     limit: int
-        limit the number of trials to find GSV images
+        Limit the number of trials to find GSV images.
         n_images * limit would be the number of candidate locations
-        to check if GSV available around the area
+        to check if GSV available around the area.
     n_jobs: int, optional (default=1)
         The number of processes (=number of CPU cores) to use.
         Specify -1 to use all available cores.
     verbose: boolean, optional (default=True)
-        whether or not to print the progress bar of the data retrieval
+        Whether or not to print the progress bar of the data retrieval.
     if_jupyter: boolean, optional (default=False)
-        whether or not the program is running on Jupyter; this matters only if verbose==True
+        Whether or not the program is running on Jupyter;
+        This matters only if verbose==True.
     """
     if len(IDs) != len(latitude_longitude):
         raise ValueError("The lengths of IDs and latitude_longitude have"
@@ -273,20 +288,28 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
     if not os.path.exists(directory_name):
         os.mkdir(directory_name)
 
-    def wrapped_in_tqdm(IDs):
-        if verbose:
-            bar = tqdm(total=len(IDs), mininterval=0, maxinterval=2,
-                       miniters=1)
-        for i in range(len(IDs)):
-            if verbose:
-                bar.update(1)
-            yield i
-        if verbose:
-            bar.close()
+    @contextlib.contextmanager
+    def tqdm_joblib(tqdm_object):
+        """Context manager to patch joblib to report into tqdm progress bar given as argument"""
+        class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+    
+            def __call__(self, *args, **kwargs):
+                tqdm_object.update(n=self.batch_size)
+                return super().__call__(*args, **kwargs)
+    
+        old_batch_callback = joblib.parallel.BatchCompletionCallBack
+        joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
+        try:
+            yield tqdm_object
+        finally:
+            joblib.parallel.BatchCompletionCallBack = old_batch_callback
+            tqdm_object.close()
 
     def collect_gsv_images_for_each_id(i): # go through each specified location
         id_ = str(IDs[i])
-        lat_lon = latitude_longitude[i]
+        loc = latitude_longitude[i]
 
         # create a sub-directory in which 'n_images' Google Street View images
         # around the specified location are saved
@@ -312,20 +335,20 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
         candidate_multiple = 1.5
         while True:
             # randomly pick 'n_needed_images' * 'candidate_multiple'
-            # candidates for locations around 'lat_lon'
+            # candidates for locations around 'loc'
             direction = npr.uniform(0, 2 * np.pi,
                                     int(n_images * candidate_multiple))
-            distance = npr.uniform(0, rad, int(n_images * candidate_multiple))
-            loc = get_lat_lon(lat_lon, distance, direction)
+            distance = np.sqrt(npr.uniform(0, 1, int(n_images * candidate_multiple))) * rad
+            lat_lon = get_lat_lon(loc, distance, direction)
             # check if GSV is available for randonly picked
             # 'n_needed_images' * 'candidate_multiple' locations
-            available = is_gsv_available(API_key, loc, search_radius, outdoor, n_images)
-            loc_valid_new = loc[available].reset_index(drop=True)
+            available = is_gsv_available(API_key, lat_lon, search_radius, outdoor, n_images)
+            loc_valid_new = lat_lon[available].reset_index(drop=True)
             try: # case of the non-first loop
                 loc_valid = loc_valid.append(loc_valid_new, ignore_index)
             except NameError: # case of the first loop
                 loc_valid = loc_valid_new
-            if len(loc_valid) >= n_needed_images: # when having enought locations
+            if len(loc_valid) >= n_needed_images: # when having enough locations
                 loc_valid = loc_valid[:n_needed_images]
                 count = 0
                 break
@@ -404,7 +427,5 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
             with open(csv_path, 'w') as f:
                 loc_data.to_csv(f, index=False)
 
-    IDs_gen = wrapped_in_tqdm(IDs)
-
-    Parallel(n_jobs)( [delayed(collect_gsv_images_for_each_id)(i)
-                       for i in IDs_gen] )
+    with tqdm_joblib(tqdm(desc='Data Retrieval Progress', total=len(IDs))) as progress_bar:
+        Parallel(n_jobs) (delayed(collect_gsv_images_for_each_id)(i) for i in range(len(IDs)))
