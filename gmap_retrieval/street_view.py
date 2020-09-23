@@ -216,7 +216,7 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
 def get_street_view_image(directory_name, API_key, IDs,
                           latitude_longitude, n_images, secret=None, rad=1,
                           camera_direction=-1, field_of_view=120, angle=0,
-                          search_radius=50, outdoor=True,
+                          search_radius=10, outdoor=True,
                           image_size="640x640", limit=10, n_jobs=1,
                           verbose=True):
     """Save Google Street View images around specified locations

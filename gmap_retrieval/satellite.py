@@ -1,6 +1,9 @@
+import joblib
+from joblib import Parallel, delayed
 import numpy as np
 import os
 import pandas as pd
+from tqdm.auto import tqdm
 import urllib
 
 def find_zoom_level(latitudes, horizontal_coverage, horizontal_size):
@@ -48,8 +51,10 @@ def find_zoom_level(latitudes, horizontal_coverage, horizontal_size):
 
     return zoom_levels.astype(int), actual_horizontal_coverage
 
-def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizontal_coverage=2, horizontal_size=640, image_ratio=1,
-                        image_scale=1, image_format="png", verbose=True):
+def get_satellite_image(directory_name, API_key, IDs, latitude_longitude,
+                        horizontal_coverage=2, horizontal_size=640,
+                        image_ratio=1, image_scale=1, image_format="png",
+                        n_jobs=1, verbose=True):
     """Save satellite images for specified locations using Google Maps Satatic API.
 
     Parameters
@@ -77,6 +82,44 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizo
     verbose: boolean, optional (default=True)
         whether or not to print the progress of the data retrieval
     """
+    @contextlib.contextmanager
+    def tqdm_joblib(tqdm_object):
+        """Context manager to patch joblib to report into tqdm progress bar"""
+        class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+
+            def __call__(self, *args, **kwargs):
+                tqdm_object.update(n=self.batch_size)
+                return super().__call__(*args, **kwargs)
+
+        old_batch_callback = joblib.parallel.BatchCompletionCallBack
+        joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
+        try:
+            yield tqdm_object
+        finally:
+            joblib.parallel.BatchCompletionCallBack = old_batch_callback
+            tqdm_object.close()
+
+    def get_single_sat_image(i):
+        url = urls[i]
+        file_name = directory_name + "/" + str(IDs[i]) + ".png"
+
+        if os.path.exists(file_name):
+            skip_id[i] = 1
+        else:
+            while True:
+                try:
+                    # get API response
+                    image = urllib.request.urlopen(url).read()
+                except IOError:
+                    pass # retry
+                else:
+                    # save the png image
+                    with open(file_name, mode="wb") as f:
+                        f.write(image)
+                    break
+
     # find the best zoom levels to feed into Google Maps Static API and resulting side lengths of satellite images
     latitudes = latitude_longitude.apply(lambda x: x.split(",")[0]).astype(float)
     zoom_levels, actual_horizontal = find_zoom_level(latitudes=latitudes, horizontal_coverage=horizontal_coverage,
@@ -102,31 +145,11 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude, horizo
         csv_exist = True
 
     skip_id = np.zeros(len(IDs))
-    # get and save satellite images using Google Maps Static API
-    for i in range(len(IDs)):
-        url = urls[i]
-        file_name = directory_name + "/" + str(IDs[i]) + ".png"
-
-        if os.path.exists(file_name):
-            if verbose:
-                print(f"{file_name} already exists.")
-            skip_id[i] = 1
-        else:
-            while True:
-                try:
-                    # get API response
-                    if verbose:
-                        print(f"API request made: {IDs[i]}")
-                    image = urllib.request.urlopen(url).read()
-                except IOError:
-                    pass # retry
-                else:
-                    # save the png image
-                    if verbose:
-                        print(f"   Satellite image saved: {file_name}")
-                    with open(file_name, mode="wb") as f:
-                        f.write(image)
-                    break
+    if verbose: # with progress bar
+        with tqdm_joblib(tqdm(desc='Data Retrieval Progress', total=len(IDs))) as progress_bar:
+            Parallel(n_jobs) (delayed(get_single_sat_image)(i) for i in range(len(IDs)))
+    else: # without progress bar
+        Parallel(n_jobs) (delayed(get_single_sat_image)(i) for i in range(len(IDs)))
 
     # save actual side lengths of newly saved satellite images
     actual_horizontal_new = pd.Series(actual_horizontal[skip_id==0], dtype=str)
