@@ -16,7 +16,8 @@ import urllib.parse as urlparse
 
 def sign_url(input_urls=None, secret=None):
     """ Sign a request URL with a URL signing secret.
-    Based on code from https://developers.google.com/maps/documentation/streetview/get-api-key
+    Based on code from
+    https://developers.google.com/maps/documentation/streetview/get-api-key.
 
     Parameters
     ----------
@@ -55,9 +56,11 @@ def sign_url(input_urls=None, secret=None):
         # Encode the binary signature into base64 for use within a URL
         encoded_signature = base64.urlsafe_b64encode(signature.digest())
 
-        original_url = url.scheme + "://" + url.netloc + url.path + "?" + url.query
+        original_url = (url.scheme + "://" + url.netloc + url.path + "?"
+                        + url.query)
 
-        signed_urls[i] = original_url + "&signature=" + encoded_signature.decode()
+        signed_urls[i] = (original_url + "&signature="
+                          + encoded_signature.decode())
 
     # Return signed URL
     return signed_urls
@@ -77,7 +80,7 @@ def get_lat_lon(loc, d, tc):
         A distance (or distances) in km from 'loc' to a place to be returned
         by this function.
         If list, length has to be same as that of 'tc' in case of list.
-        
+
     tc: float | list of float
         A direction (or directions) in radians.
         If list, length has to be same as that of 'd' in case of list.
@@ -97,7 +100,7 @@ def get_lat_lon(loc, d, tc):
                              "or both array-like.")
         elif len(d) != len(tc):
             raise ValueError("The lengths of d and tc needs to be same.")
-          
+
     # if loc is array-like
     if hasattr(loc, '__len__') and not isinstance(loc, str):
         if not hasattr(d, '__len__'):
@@ -106,17 +109,17 @@ def get_lat_lon(loc, d, tc):
         if len(loc) != len(d):
             raise ValueError("If loc is array-like, both d and tc need to be "
                              "array-like with same length.")
-    
+
     # if loc is not array-like
     else:
         if hasattr(d, '__len__'):
             loc = [loc] * len(d)
-            
+
         else: # if d and tc is not array-like
             d = [d]
             tc = [tc]
-    
-    
+
+
     circumference = 40075 #km
     if any(np.array(d) > circumference / 2):
         raise ValueError("Distance must be smaller "
@@ -124,7 +127,7 @@ def get_lat_lon(loc, d, tc):
 
     if any(np.logical_or(np.array(tc) < 0, np.array(tc) > 2 * np.pi)):
         raise ValueError("Direction must be between 0 to 2 * Pi.")
-    
+
     loc = np.array([l.split(",") for l in loc], dtype=float)
     d = np.array(d)
     tc = np.array(tc)
@@ -211,10 +214,10 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
     return availability
 
 def get_street_view_image(directory_name, API_key, secret, IDs,
-                          latitude_longitude, n_images, rad=1, 
-                          camera_direction=-1, field_of_view=120, angle=0, 
+                          latitude_longitude, n_images, rad=1,
+                          camera_direction=-1, field_of_view=120, angle=0,
                           search_radius=50, outdoor=True,
-                          image_size="640x640", limit=10, n_jobs=1, 
+                          image_size="640x640", limit=10, n_jobs=1,
                           verbose=True, if_jupyter=False):
     """Save Google Street View images around specified locations
     using Street View Satatic API.
@@ -265,7 +268,7 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
     outdoor: boolean, optional (default=True)
         Whether or not to limit the search to outdoor photos.
     image_size: str, optional (default="400x400")
-        The rectangular dimensions of the map image; 
+        The rectangular dimensions of the map image;
         Takes the form {horizontal_value}x{vertical_value}.
     limit: int
         Limit the number of trials to find GSV images.
@@ -290,15 +293,15 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
 
     @contextlib.contextmanager
     def tqdm_joblib(tqdm_object):
-        """Context manager to patch joblib to report into tqdm progress bar given as argument"""
+        """Context manager to patch joblib to report into tqdm progress bar"""
         class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
-    
+
             def __call__(self, *args, **kwargs):
                 tqdm_object.update(n=self.batch_size)
                 return super().__call__(*args, **kwargs)
-    
+
         old_batch_callback = joblib.parallel.BatchCompletionCallBack
         joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
         try:
@@ -338,11 +341,15 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
             # candidates for locations around 'loc'
             direction = npr.uniform(0, 2 * np.pi,
                                     int(n_images * candidate_multiple))
-            distance = np.sqrt(npr.uniform(0, 1, int(n_images * candidate_multiple))) * rad
+            distance = (np.sqrt(npr.uniform(0,
+                                            1,
+                                            int(n_images * candidate_multiple)))
+                                            * rad)
             lat_lon = get_lat_lon(loc, distance, direction)
             # check if GSV is available for randonly picked
             # 'n_needed_images' * 'candidate_multiple' locations
-            available = is_gsv_available(API_key, lat_lon, search_radius, outdoor, n_images)
+            available = is_gsv_available(API_key, lat_lon, search_radius,
+                                         outdoor, n_images)
             loc_valid_new = lat_lon[available].reset_index(drop=True)
             try: # case of the non-first loop
                 loc_valid = loc_valid.append(loc_valid_new, ignore_index)
@@ -352,16 +359,23 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
                 loc_valid = loc_valid[:n_needed_images]
                 count = 0
                 break
-            elif n_images * limit < trial_count: # if there are not enough locations where GSV images are available
-                print(f"After checking {trial_count} locations for GSV images, only {len(loc_valid)} + pre-existing {n_existing_images} GSV images found around the location where id_ = {id_}")
+            # if there are not enough locations where GSV images are available
+            elif n_images * limit < trial_count:
+                print(f"After checking {trial_count} locations for GSV images,"
+                      f"only {len(loc_valid)}"
+                      f"+ pre-existing {n_existing_images}"
+                      f"GSV images found around the location where id_ = {id_}")
                 count -= len(loc_valid_new)
                 break
-            else: # if not enough available locations are randomly chosen yet, go back to get candidates
+            # if not enough available locations are randomly chosen yet
+            else:
                 trial_count += n_images * candidate_multiple
                 count -= len(loc_valid_new)
 
         # crate URLs
-        # check https://developers.google.com/maps/documentation/streetview/intro for details of API
+        # check
+        # https://developers.google.com/maps/documentation/streetview/intro
+        # for details of API
         prefix = "https://maps.googleapis.com/maps/api/streetview?"
         location = "location=" + loc_valid
         size = "&size=" + image_size
