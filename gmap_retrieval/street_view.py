@@ -213,8 +213,8 @@ def is_gsv_available(API_key, loc, search_radius, outdoor, limit=None):
             return availability
     return availability
 
-def get_street_view_image(directory_name, API_key, secret, IDs,
-                          latitude_longitude, n_images, rad=1,
+def get_street_view_image(directory_name, API_key, IDs,
+                          latitude_longitude, n_images, secret=None, rad=1,
                           camera_direction=-1, field_of_view=120, angle=0,
                           search_radius=50, outdoor=True,
                           image_size="640x640", limit=10, n_jobs=1,
@@ -229,11 +229,6 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
         If the directory doesn't exist, creates a new one.
     API_key: str
         Key for Google Map API
-    secret: str | None
-        Signature to authenticate Google static street view API requests.
-        If None, no digital signature is used.
-        If retrieving large amount of data, this variable might be required;
-        Check https://developers.google.com/maps/documentation/streetview/usage-and-billing#authenticating-requests
     IDs: pandas Series [n_locations]
         List of IDs that identify locations.
     latitude_longitude: pandas Series [n_locations]
@@ -243,6 +238,11 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
         e.g. "40.714728,-73.998672".
     n_images: int
         The number of Google Street View images to be fetched for each ID.
+    secret: str | None, optional (defalut=None)
+        Signature to authenticate Google static street view API requests.
+        If None, no digital signature is used.
+        If retrieving large amount of data, this variable might be required;
+        Check https://developers.google.com/maps/documentation/streetview/usage-and-billing#authenticating-requests
     rad: int, optional (default=1)
         Radius, specified in km, of a circle around the location,
         specified by latitude and longitude, in which
