@@ -218,7 +218,7 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
                           camera_direction=-1, field_of_view=120, angle=0,
                           search_radius=50, outdoor=True,
                           image_size="640x640", limit=10, n_jobs=1,
-                          verbose=True, if_jupyter=False):
+                          verbose=True):
     """Save Google Street View images around specified locations
     using Street View Satatic API.
 
@@ -270,7 +270,7 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
     image_size: str, optional (default="400x400")
         The rectangular dimensions of the map image;
         Takes the form {horizontal_value}x{vertical_value}.
-    limit: int
+    limit: int, optional (default=10)
         Limit the number of trials to find GSV images.
         n_images * limit would be the number of candidate locations
         to check if GSV available around the area.
@@ -279,9 +279,6 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
         Specify -1 to use all available cores.
     verbose: boolean, optional (default=True)
         Whether or not to print the progress bar of the data retrieval.
-    if_jupyter: boolean, optional (default=False)
-        Whether or not the program is running on Jupyter;
-        This matters only if verbose==True.
     """
     if len(IDs) != len(latitude_longitude):
         raise ValueError("The lengths of IDs and latitude_longitude have"
@@ -441,5 +438,8 @@ def get_street_view_image(directory_name, API_key, secret, IDs,
             with open(csv_path, 'w') as f:
                 loc_data.to_csv(f, index=False)
 
-    with tqdm_joblib(tqdm(desc='Data Retrieval Progress', total=len(IDs))) as progress_bar:
+    if verbose: # with progress bar
+        with tqdm_joblib(tqdm(desc='Data Retrieval Progress', total=len(IDs))) as progress_bar:
+            Parallel(n_jobs) (delayed(collect_gsv_images_for_each_id)(i) for i in range(len(IDs)))
+    else: # without progress bar
         Parallel(n_jobs) (delayed(collect_gsv_images_for_each_id)(i) for i in range(len(IDs)))
