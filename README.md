@@ -21,6 +21,7 @@ import pandas as pd
 
 # key is your own Google API key
 key='Your API key'
+output_dir = "save_"
 
 data = pd.DataFrame([[1, '40.752937,-73.977240', 'NYC Grand Central Station'],
                      [2, '51.531090,-0.125752', 'London St Pancras Station'],
@@ -31,19 +32,15 @@ data = pd.DataFrame([[1, '40.752937,-73.977240', 'NYC Grand Central Station'],
 
 # get satellite images for locations in the 'data' variable
 # this will store satellite images in the directory "satellite_images"
-get_satellite_image(directory_name="satellite_images", API_key=key,
-                    IDs=data['id'], latitude_longitude=data['loc'],
-                    horizontal_coverage=2, image_size=640, , image_ratio=1,
-                    image_scale=1, image_format="png", verbose=True)
+get_satellite_image(directory_name=f"{output_dir}/satellite_images",
+                    API_key=key, IDs=data['id'], latitude_longitude=data['loc'],
+                    n_jobs=-1)
 
 # get street view images from areas around the locations in the 'data' variable
 # this will store street view images in the directory "street_views"
-get_street_view_image(directory_name='street_view', API_key=key,
-                      secret=None, IDs=data['id'], latitude_longitude=data['loc'],
-                      n_images=10, rad=1, camera_direction=-1,
-                      field_of_view=120, angle=0, search_radius=100,
-                      outdoor=True, image_size="640x640",
-                      limit=10, n_job=True, verbose=True, if_jupyter==False)
+get_street_view_image(directory_name=f'{output_dir}/street_view', API_key=key,
+                      IDs=data['id'], latitude_longitude=data['loc'],
+                      n_images=10, search_radius=100, n_jobs=-1)
 
 # get data of nearby restaurants on Google Maps
 # around the locations in the 'data' variables

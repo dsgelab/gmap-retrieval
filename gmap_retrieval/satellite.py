@@ -56,33 +56,47 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude,
                         horizontal_coverage=2, horizontal_size=640,
                         image_ratio=1, image_scale=1, image_format="png",
                         n_jobs=1, verbose=True):
-    """Save satellite images for specified locations using Google Maps Satatic API.
+    """Save satellite images for specified locations using Google API.
+    For details of API, check:
+    https://developers.google.com/maps/documentation/maps-static/start .
 
     Parameters
     ----------
     directory_name: str
-        name of a new directory containing all the saved images
+        Name of a new directory containing all the saved images
     API_key: str
-        key for Google Map API
+        Key for Google Map API
     IDs: pandas Series [n_locations]
-        list of IDs that identify locations
+        List of IDs that identify locations
     latitude_longitude: pandas Series [n_locations]
-        list of locations specified by latitude and longitude;
+        List of locations specified by latitude and longitude;
         each location needs to take the form of comma-separated {latitude,longitude} pair; e.g. "40.714728,-73.998672"
     horizontal_coverage: int, optional (default="2,2")
-        ideal horizontal length of the image coverage in km
-        saved images will NOT have the same exact dimensions but will have the closest possible dimensions
-    horizontal_size: int, optional (default="640")
-        the horizontal length of the image in pixels; the maximum value is 640
+        Ideal horizontal length of the image coverage in km.
+        Saved images will NOT have the same exact dimensions,
+        but will have the closest possible dimensions.
+    horizontal_size: int, optional (default=640)
+        The horizontal length of the image in pixels; the maximum value is 640.
     image_ratio: float, optional (default=1)
-        the ratio of the vertical length of the image to the horizontal length of the image
+        The ratio of the vertical length of the image
+        to the horizontal length of the image.
+        The vertical length of the image has to be 640 or smaller.
     image_scale: int, optional (default=1)
-        scaling on the size
+        Scaling on the size.
     image_format: str, optional (default="png")
-        format of output images
+        Format of output images.
     verbose: boolean, optional (default=True)
-        whether or not to print the progress of the data retrieval
+        Whether or not to print the progress of the data retrieval.
     """
+    # error handlings
+    if horizontal_size > 640 or horizontal_size < 1:
+        raise ValueError("horizontal_size has to be "
+                         "a positive int no bigger than 640.")
+    vertical_size = int(horizontal_size * image_ratio)
+    if vertical_size > 640 or vertical_size < 1:
+        raise ValueError("horizontal_size * image_ratio has to be "
+                         "a positive number no bigger than 640.")
+
     @contextlib.contextmanager
     def tqdm_joblib(tqdm_object):
         """Context manager to patch joblib to report into tqdm progress bar"""
@@ -130,7 +144,7 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude,
     prefix = "https://maps.googleapis.com/maps/api/staticmap?"
     center = "center=" + latitude_longitude
     zoom = "&zoom=" + pd.Series(zoom_levels, dtype=str)
-    size = "&size=" + str(horizontal_size) + "x" + str(horizontal_size*image_ratio)
+    size = "&size=" + str(horizontal_size) + "x" + str(vertical_size)
     scale = "&scale=" + str(image_scale)
     form = "&format=" + image_format
     maptype = "&maptype=" + "satellite"
