@@ -101,7 +101,7 @@ Especially, when using the method calculate_cost, please check if [the official 
 Check docstrings of methods for details.
 
 ## Installation
-`pip install git+https://github.com/tshimizu97/gmap_retrieval.git`
+`pip install git+https://github.com/dsgelab/gmap_retrieval.git`
 
 ## Author
 * Takao Shimizu  
