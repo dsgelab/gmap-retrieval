@@ -1,7 +1,7 @@
 # gmap_retrieval (Unstable Version: No Test Available)
 
 ## Overview
-This Python package is for retrieving geographical data using Google API based on a list of locations specified by latitudes and longitudes.　
+This Python package is makes it easy to retrieve geographical data using Google API based on a list of locations specified by latitudes and longitudes.
 
 Using this package, you can fetch:
 * satellite images centered around the input locations,
@@ -12,7 +12,7 @@ You can also:
 * get list of user reviews based on a list of [Google Place IDs](https://developers.google.com/places/place-id) of properties of interests, and
 * predict the cost when collecting different types of data using above functions.
 
-This package was developed for the purpose of collecting geographical data of individuals in biobank datasets in research contexts.  
+This package was developed for the purpose of collecting geographical data of individuals in biobank datasets in research contexts.
 
 ## Examples
 ```
@@ -94,11 +94,12 @@ calculate_cost(n_loc=1000, price_table=None, # use default price table
 * joblib 0.14.1
 
 ## Disclaimer
-This package is built based on Google APIs, and any change in the APIs might cause problems in running this package.  
-Especially, when using the method calculate_cost, please check if [the official pricing table](https://cloud.google.com/maps-platform/pricing/sheet) is reflected in the price table in the docstring of the method.
+This package is built based on Google APIs, and thus, though use of this package is free, you might be billed by Google for using Google APIs. The cost incurred by using this package can be predicted by using calculate_cost function, but we do not take any responsibility or liability for any unexpected cost incurred by using this package.
+When using the method calculate_cost, please check if [the official pricing table](https://cloud.google.com/maps-platform/pricing/sheet) is same as below:
+
 
 ## Documentation
-Check docstrings of methods for details.
+There is no official documentation for this package; instead check the examples usages above, and refer to docstring of each function for details.
 
 ## Installation
 `pip install git+https://github.com/tshimizu97/gmap_retrieval.git`
