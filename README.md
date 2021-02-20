@@ -21,8 +21,9 @@ import pandas as pd
 
 # key is your own Google API key
 key='Your API key'
-output_dir = "save_"
+output_dir = "example"
 
+# locations for which geographical data are retrieved
 data = pd.DataFrame([[1, '40.752937,-73.977240', 'NYC Grand Central Station'],
                      [2, '51.531090,-0.125752', 'London St Pancras Station'],
                      [3, '35.681463,139.767157', 'Tokyo Station'],
@@ -102,7 +103,7 @@ When using the method calculate_cost, please check if [the official pricing tabl
 There is no official documentation for this package; instead check the examples usages above, and refer to docstring of each function for details.
 
 ## Installation
-`pip install git+https://github.com/dsgelab/gmap_retrieval.git`
+`pip install git+https://github.com/dsgelab/gmap-retrieval.git`
 
 ## Author
 * Takao Shimizu  

@@ -137,7 +137,7 @@ def get_nearby_places(directory_name, API_key, IDs, latitude_longitude, radius=1
     # create directory to put all the json files
     directory = directory_name
     if not os.path.exists(directory):
-        os.mkdir(directory)
+        os.mkdirs(directory)
 
     # get info about properties around the locations specified by 'ID'
     for i in range(len(IDs)):
