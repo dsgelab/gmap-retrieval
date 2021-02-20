@@ -286,7 +286,7 @@ def get_street_view_image(directory_name, API_key, IDs,
 
     # create directory in which all the images are saved
     if not os.path.exists(directory_name):
-        os.mkdirs(directory_name)
+        os.makedirs(directory_name)
 
     @contextlib.contextmanager
     def tqdm_joblib(tqdm_object):

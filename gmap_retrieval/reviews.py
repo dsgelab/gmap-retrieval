@@ -18,7 +18,7 @@ def get_reviews(directory_name, API_key, place_id, verbose=True):
         whether or not to print the progress of the data retrieval
     """
     if not os.path.exists(directory_name):
-        os.mkdirs(directory_name)
+        os.makedirs(directory_name)
 
     prefix = "https://maps.googleapis.com/maps/api/place/details/json?"
     place_id_ = "place_id=" + pd.Series(place_id)

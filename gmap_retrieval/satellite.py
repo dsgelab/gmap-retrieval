@@ -167,7 +167,7 @@ def get_satellite_image(directory_name, API_key, IDs, latitude_longitude,
 
     # create a directory to save satellite images
     if not os.path.exists(directory_name):
-        os.mkdirs(directory_name)
+        os.makedirs(directory_name)
         csv_exist = False
     else:
         csv_exist = True
