@@ -1,4 +1,4 @@
-# gmap_retrieval (Unstable Version: No Test Available)
+# gmap_retrieval
 
 ## Overview
 This Python package is makes it easy to retrieve geographical data using Google API based on a list of locations specified by latitudes and longitudes.
