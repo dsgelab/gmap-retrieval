@@ -32,13 +32,13 @@ data = pd.DataFrame([[1, '40.752937,-73.977240', 'NYC Grand Central Station'],
                     columns=['id', 'loc', 'place'])
 
 # get satellite images for locations in the 'data' variable
-# this will store satellite images in the directory "satellite_images"
+# this will store satellite images in the subdirectory "satellite_images"
 get_satellite_image(directory_name=f"{output_dir}/satellite_images",
                     API_key=key, IDs=data['id'], latitude_longitude=data['loc'],
                     n_jobs=-1)
 
 # get street view images from areas around the locations in the 'data' variable
-# this will store street view images in the directory "street_views"
+# this will store street view images in the subdirectory "street_views"
 get_street_view_image(directory_name=f'{output_dir}/street_view', API_key=key,
                       IDs=data['id'], latitude_longitude=data['loc'],
                       n_images=10, search_radius=100, n_jobs=-1)
@@ -47,22 +47,22 @@ get_street_view_image(directory_name=f'{output_dir}/street_view', API_key=key,
 # around the locations in the 'data' variables
 # this function saves json files containing data about nearby restaurants
 # under the directory called 'nearby_places'
-get_nearby_places(directory_name='nearby_places', API_key=key,
+get_nearby_places(directory_name=f'{output_dir}/nearby_places', API_key=key,
                   IDs=data['id'], latitude_longitude=data['loc'],
                   radius=1, place_types=['restaurant'],
                   verbose=True)
 
 # create csv file called 'nearby_places.csv' from json files
 # under the directory 'nearby_places'
-nearby_places = create_csv_nearby_places(directory_name='nearby_places',
+nearby_places = create_csv_nearby_places(directory_name=f'{output_dir}/nearby_places',
                                          place_types=['restaurant'],
                                          file_name=None)
 
 place_id = nearby_places['place_id']
 
 # get reviews for the restaurants around the locations in the 'data' variables
-# saves json files containing review data under directory called 'reviews'
-get_reviews(directory_name='reviews', API_key=key, place_id=place_id,
+# saves json files containing review data under subdirectory called 'reviews'
+get_reviews(directory_name=f'{output_dir}/reviews', API_key=key, place_id=place_id,
             verbose=True)
 
 # create csv file called 'reviews.csv' from json files
